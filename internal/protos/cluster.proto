@@ -1,0 +1,86 @@
+syntax = "proto3";
+package protos;
+option go_package = "/protos";
+
+
+service RegistryServer {
+    rpc Register(RegisterRequest) returns (RegisterResponse);
+    rpc Deregister(DeregisterRequest) returns (DeregisterResponse);
+    rpc Discover(DiscoveryRequest) returns (DiscoveryResponse);
+    rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+}
+
+message ServiceInstance {
+    string              service_name    = 1;
+    string              instance_id     = 2;
+    string              addr            = 3;
+    map<string, int32>  messages        = 4;
+}
+
+message RegisterRequest {
+    ServiceInstance     instances       = 1;
+}
+message RegisterResponse {
+}
+
+message DeregisterRequest {
+    ServiceInstance     instances       = 1;
+}
+message DeregisterResponse {
+}
+
+message DiscoveryRequest {
+    string              service_name    = 1;
+}
+message DiscoveryResponse {
+    repeated  ServiceInstance instances = 1;
+}
+
+message HeartbeatRequest {
+    string              service_name    = 1;
+    string              instance_id     = 2;
+}
+message HeartbeatResponse {
+}
+
+service MembersServer {
+    rpc NewMembers(NewMembersRequest) returns (NewMembersResponse);
+    rpc DelMembers(DelMembersRequest) returns (DelMembersResponse);
+}
+
+message NewMembersRequest {
+    ServiceInstance     instances       = 1;
+}
+message NewMembersResponse {
+}
+
+message DelMembersRequest {
+    string              service_name    = 1;
+    string              instance_id     = 2;
+}
+message DelMembersResponse {
+    string              service_name    = 1;
+    string              instance_id     = 2;
+}
+
+service RemoteServer {
+    rpc Call(CallRequest) returns (CallResponse);
+    rpc Notify(NotifyRequest) returns (NotifyResponse);
+}
+
+message CallRequest {
+    string              instance_id     = 1;
+    int64               session_id      = 2;
+    bytes               data            = 3;
+}
+message CallResponse {
+    bytes               data            = 3;
+}
+
+message NotifyRequest {
+    string              instance_id     = 1;
+    int64               session_id      = 2;
+    bytes               data            = 3;
+}
+message NotifyResponse {
+}
