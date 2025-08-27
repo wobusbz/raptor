@@ -11,34 +11,34 @@ service RegistryServer {
 }
 
 message ServiceInstance {
-    string              service_name    = 1;
-    string              instance_id     = 2;
-    string              addr            = 3;
-    map<string, int32>  messages        = 4;
+    string              Service_name    = 1;
+    string              Instance_id     = 2;
+    string              Addr            = 3;
+    bool                Frontend        = 4;
+    map<string, int32>  Messages        = 5;
 }
 
 message RegisterRequest {
-    ServiceInstance     instances       = 1;
+    ServiceInstance     Instances       = 1;
 }
 message RegisterResponse {
 }
 
 message DeregisterRequest {
-    ServiceInstance     instances       = 1;
+    ServiceInstance     Instances       = 1;
 }
 message DeregisterResponse {
 }
 
 message DiscoveryRequest {
-    string              service_name    = 1;
+    string              Service_name    = 1;
 }
 message DiscoveryResponse {
-    repeated  ServiceInstance instances = 1;
+    repeated  ServiceInstance Instances = 1;
 }
 
 message HeartbeatRequest {
-    string              service_name    = 1;
-    string              instance_id     = 2;
+    ServiceInstance     Instances       = 1;
 }
 message HeartbeatResponse {
 }
@@ -49,38 +49,71 @@ service MembersServer {
 }
 
 message NewMembersRequest {
-    ServiceInstance     instances       = 1;
+    ServiceInstance     Instances       = 1;
 }
 message NewMembersResponse {
 }
 
 message DelMembersRequest {
-    string              service_name    = 1;
-    string              instance_id     = 2;
+    string              Service_name    = 1;
+    string              Instance_id     = 2;
 }
 message DelMembersResponse {
-    string              service_name    = 1;
-    string              instance_id     = 2;
+    string              Service_name    = 1;
+    string              Instance_id     = 2;
 }
 
 service RemoteServer {
-    rpc Call(CallRequest) returns (CallResponse);
-    rpc Notify(NotifyRequest) returns (NotifyResponse);
+    rpc Receive(stream RemoteMessage) returns (RemoteMessage);
 }
 
-message CallRequest {
-    string              instance_id     = 1;
-    int64               session_id      = 2;
-    bytes               data            = 3;
-}
-message CallResponse {
-    bytes               data            = 3;
+message RPCMessage {
+    int64   SessionID              = 1;
+    int64   Seq                    = 2;
+    bytes   Data                   = 3;
+    string  Route                  = 4; // User/C2SLogin
 }
 
-message NotifyRequest {
-    string              instance_id     = 1;
-    int64               session_id      = 2;
-    bytes               data            = 3;
+message NotifyMessage {
+    int64   SessionID              = 1;
+    bytes   Data                   = 2;
+    string  Route                  = 3;
 }
-message NotifyResponse {
+
+message PushMessage {
+    int64   SessionID              = 1;
+    bytes   Data                   = 2;
+}
+
+message OnSessionBindUIDMessage {
+    int64   SessionID              = 1;
+    int64   UID                    = 2;
+}
+
+message OnSessionConnectMessage {
+    int64   UID                    = 1;
+    map<string, ServiceInstance>    Instances = 2;
+}
+
+message OnSessionDisconnectionMessage {
+    int64   UID                    = 1;
+}
+
+message RemoteMessage {
+    enum Kind {
+        KIND_UNKNOWN               = 0;
+        KIND_RPC                   = 1;
+        KIND_NOTIFY                = 2;
+        KIND_PUSH                  = 3;
+        KIND_ON_SESSION_BIND_UID   = 4;
+        KIND_ON_SESSION_CONNECT    = 5;
+        KIND_ON_SESSION_DISCONNECT = 6;
+    }
+    Kind                            kind                          = 1;
+    RPCMessage                      RPCMessage                    = 2;
+    NotifyMessage                   NotifyMessage                 = 3;
+    PushMessage                     PushMessage                   = 4;
+    OnSessionBindUIDMessage         OnSessionBindUIDMessage       = 5;
+    OnSessionConnectMessage         OnSessionConnectMessage       = 6;
+    OnSessionDisconnectionMessage   OnSessionDisconnectionMessage = 7;
 }

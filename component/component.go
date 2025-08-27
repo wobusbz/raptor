@@ -1,8 +1,10 @@
 package component
 
+import "game/session"
+
 type Component interface {
 	Init()
 	Shutdown()
-	OnSessionDisconnect()
-	OnSessionConnect()
+	OnSessionDisconnect(session.Session)
+	OnSessionConnect(session.Session)
 }

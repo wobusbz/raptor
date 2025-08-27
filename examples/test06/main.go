@@ -1,16 +1,24 @@
 package main
 
 import (
-	"crypto/rand"
-	"fmt"
+	"game/cluster"
+	"log"
+	"os"
 )
 
-func SimpleUUID() string {
-	b := make([]byte, 16)
-	_, _ = rand.Read(b)
-	return fmt.Sprintf("%x-%x-%x-%x", b[0:2], b[2:4], b[4:6], b[6:])
-}
-
 func main() {
-	fmt.Println(SimpleUUID())
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+
+	s := cluster.Server{ServerAddr: os.Args[1], Options: cluster.Options{
+		AdvertiseAddr: os.Args[2],
+		Name:          os.Args[3],
+		ClientAddr:    os.Args[4],
+		Frontend:      os.Args[4] != ""},
+	}
+	if err := s.Startup(); err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	s.Shutdown()
 }

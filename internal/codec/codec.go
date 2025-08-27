@@ -3,11 +3,12 @@ package codec
 import (
 	"bytes"
 	"errors"
+	"game/internal/packet"
 )
 
 const (
 	HeadLength    = 4
-	MaxPacketSize = 8 << 20
+	MaxPacketSize = 10 << 20
 )
 
 var ErrPacketSizeExcced = errors.New("codec: packet size exceed")
@@ -15,7 +16,7 @@ var ErrPacketSizeExcced = errors.New("codec: packet size exceed")
 type Decoder struct {
 	buf  *bytes.Buffer
 	size int
-	typ  Type
+	typ  packet.Type
 }
 
 func NewDecoder() *Decoder {
@@ -24,9 +25,9 @@ func NewDecoder() *Decoder {
 
 func (c *Decoder) forward() error {
 	header := c.buf.Next(HeadLength)
-	c.typ = Type(header[0])
-	if c.typ < Data || c.typ > Forward {
-		return ErrWrongPacketType
+	c.typ = packet.Type(header[0])
+	if c.typ < packet.Data || c.typ > packet.Forward {
+		return packet.ErrWrongPacketType
 	}
 	c.size = bytesToInt(header[1:])
 	if c.size > MaxPacketSize {
@@ -35,7 +36,7 @@ func (c *Decoder) forward() error {
 	return nil
 }
 
-func (d *Decoder) Decode(data []byte) ([]*Packet, error) {
+func (d *Decoder) Decode(data []byte) ([]*packet.Packet, error) {
 	_, err := d.buf.Write(data)
 	if err != nil {
 		return nil, err
@@ -51,9 +52,9 @@ func (d *Decoder) Decode(data []byte) ([]*Packet, error) {
 		}
 	}
 
-	var packets []*Packet
+	var packets []*packet.Packet
 	for d.size <= d.buf.Len() {
-		packets = append(packets, &Packet{Type: d.typ, Length: d.size, Data: d.buf.Next(d.size)})
+		packets = append(packets, &packet.Packet{Type: d.typ, Length: d.size, Data: d.buf.Next(d.size)})
 		if d.buf.Len() < HeadLength {
 			d.size = -1
 			break
@@ -66,12 +67,12 @@ func (d *Decoder) Decode(data []byte) ([]*Packet, error) {
 	return packets, nil
 }
 
-func Encode(typ Type, data []byte) ([]byte, error) {
-	if typ < Data || typ > Forward {
-		return nil, ErrWrongPacketType
+func Encode(typ packet.Type, data []byte) ([]byte, error) {
+	if typ < packet.Data || typ > packet.Forward {
+		return nil, packet.ErrWrongPacketType
 	}
 
-	p := &Packet{Type: typ, Length: len(data)}
+	p := &packet.Packet{Type: typ, Length: len(data)}
 	buf := make([]byte, p.Length+HeadLength)
 	buf[0] = byte(p.Type)
 

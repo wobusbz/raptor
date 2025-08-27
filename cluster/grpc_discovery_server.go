@@ -113,7 +113,7 @@ func (gs *grpcDiscoveryServer) Discover(ctx context.Context, in *protos.Discover
 }
 
 func (gs *grpcDiscoveryServer) Heartbeat(ctx context.Context, in *protos.HeartbeatRequest) (*protos.HeartbeatResponse, error) {
-	return &protos.HeartbeatResponse{}, gs.grpcDiscoveryClient.updateMembers(in.GetServiceName(), in.GetInstanceId())
+	return &protos.HeartbeatResponse{}, gs.grpcDiscoveryClient.updateMembers(in.GetInstances())
 }
 
 func (gs *grpcDiscoveryServer) checkMemberHeartbeat() {

@@ -1,13 +1,5 @@
 package main
 
-import (
-	"game/cluster"
-	"log"
-	"os"
-	"os/signal"
-	"syscall"
-)
-
 func main() {
 	// sg := make(chan os.Signal, 1)
 	// signal.Notify(sg, syscall.SIGINT, syscall.SIGQUIT, syscall.SIGTERM)

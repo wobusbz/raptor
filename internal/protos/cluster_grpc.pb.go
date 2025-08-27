@@ -371,16 +371,14 @@ var MembersServer_ServiceDesc = grpc.ServiceDesc{
 }
 
 const (
-	RemoteServer_Call_FullMethodName   = "/protos.RemoteServer/Call"
-	RemoteServer_Notify_FullMethodName = "/protos.RemoteServer/Notify"
+	RemoteServer_Receive_FullMethodName = "/protos.RemoteServer/Receive"
 )
 
 // RemoteServerClient is the client API for RemoteServer service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type RemoteServerClient interface {
-	Call(ctx context.Context, in *CallRequest, opts ...grpc.CallOption) (*CallResponse, error)
-	Notify(ctx context.Context, in *NotifyRequest, opts ...grpc.CallOption) (*NotifyResponse, error)
+	Receive(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[RemoteMessage, RemoteMessage], error)
 }
 
 type remoteServerClient struct {
@@ -391,32 +389,24 @@ func NewRemoteServerClient(cc grpc.ClientConnInterface) RemoteServerClient {
 	return &remoteServerClient{cc}
 }
 
-func (c *remoteServerClient) Call(ctx context.Context, in *CallRequest, opts ...grpc.CallOption) (*CallResponse, error) {
+func (c *remoteServerClient) Receive(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[RemoteMessage, RemoteMessage], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CallResponse)
-	err := c.cc.Invoke(ctx, RemoteServer_Call_FullMethodName, in, out, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &RemoteServer_ServiceDesc.Streams[0], RemoteServer_Receive_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &grpc.GenericClientStream[RemoteMessage, RemoteMessage]{ClientStream: stream}
+	return x, nil
 }
 
-func (c *remoteServerClient) Notify(ctx context.Context, in *NotifyRequest, opts ...grpc.CallOption) (*NotifyResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(NotifyResponse)
-	err := c.cc.Invoke(ctx, RemoteServer_Notify_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type RemoteServer_ReceiveClient = grpc.ClientStreamingClient[RemoteMessage, RemoteMessage]
 
 // RemoteServerServer is the server API for RemoteServer service.
 // All implementations should embed UnimplementedRemoteServerServer
 // for forward compatibility.
 type RemoteServerServer interface {
-	Call(context.Context, *CallRequest) (*CallResponse, error)
-	Notify(context.Context, *NotifyRequest) (*NotifyResponse, error)
+	Receive(grpc.ClientStreamingServer[RemoteMessage, RemoteMessage]) error
 }
 
 // UnimplementedRemoteServerServer should be embedded to have
@@ -426,11 +416,8 @@ type RemoteServerServer interface {
 // pointer dereference when methods are called.
 type UnimplementedRemoteServerServer struct{}
 
-func (UnimplementedRemoteServerServer) Call(context.Context, *CallRequest) (*CallResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Call not implemented")
-}
-func (UnimplementedRemoteServerServer) Notify(context.Context, *NotifyRequest) (*NotifyResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Notify not implemented")
+func (UnimplementedRemoteServerServer) Receive(grpc.ClientStreamingServer[RemoteMessage, RemoteMessage]) error {
+	return status.Errorf(codes.Unimplemented, "method Receive not implemented")
 }
 func (UnimplementedRemoteServerServer) testEmbeddedByValue() {}
 
@@ -452,41 +439,12 @@ func RegisterRemoteServerServer(s grpc.ServiceRegistrar, srv RemoteServerServer)
 	s.RegisterService(&RemoteServer_ServiceDesc, srv)
 }
 
-func _RemoteServer_Call_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CallRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(RemoteServerServer).Call(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: RemoteServer_Call_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RemoteServerServer).Call(ctx, req.(*CallRequest))
-	}
-	return interceptor(ctx, in, info, handler)
+func _RemoteServer_Receive_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(RemoteServerServer).Receive(&grpc.GenericServerStream[RemoteMessage, RemoteMessage]{ServerStream: stream})
 }
 
-func _RemoteServer_Notify_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NotifyRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(RemoteServerServer).Notify(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: RemoteServer_Notify_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(RemoteServerServer).Notify(ctx, req.(*NotifyRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type RemoteServer_ReceiveServer = grpc.ClientStreamingServer[RemoteMessage, RemoteMessage]
 
 // RemoteServer_ServiceDesc is the grpc.ServiceDesc for RemoteServer service.
 // It's only intended for direct use with grpc.RegisterService,
@@ -494,16 +452,13 @@ func _RemoteServer_Notify_Handler(srv interface{}, ctx context.Context, dec func
 var RemoteServer_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "protos.RemoteServer",
 	HandlerType: (*RemoteServerServer)(nil),
-	Methods: []grpc.MethodDesc{
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
 		{
-			MethodName: "Call",
-			Handler:    _RemoteServer_Call_Handler,
-		},
-		{
-			MethodName: "Notify",
-			Handler:    _RemoteServer_Notify_Handler,
+			StreamName:    "Receive",
+			Handler:       _RemoteServer_Receive_Handler,
+			ClientStreams: true,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
 	Metadata: "cluster.proto",
 }

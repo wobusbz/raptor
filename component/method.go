@@ -1,14 +1,18 @@
 package component
 
 import (
+	"game/session"
 	"reflect"
 	"unicode"
 	"unicode/utf8"
+
+	"google.golang.org/protobuf/proto"
 )
 
 var (
-	typeOfError = reflect.TypeOf((*error)(nil)).Elem()
-	typeOfBytes = reflect.TypeOf(([]byte)(nil))
+	typeOfSession  = reflect.TypeOf((*session.Session)(nil)).Elem()
+	typeOfError    = reflect.TypeOf((*error)(nil)).Elem()
+	typeOfMessages = reflect.TypeOf((*proto.Message)(nil)).Elem()
 )
 
 func isExported(name string) bool {
@@ -31,15 +35,12 @@ func isHandlerMethod(method reflect.Method) bool {
 	if mt.NumIn() != 3 {
 		return false
 	}
-	if mt.NumOut() != 1 {
+	if t1 := mt.In(1); t1.Kind() != reflect.Interface && !t1.Implements(typeOfSession) {
 		return false
 	}
-	if t1 := mt.In(1); t1.Kind() != reflect.Pointer {
+	if !mt.In(2).Implements(typeOfMessages) {
 		return false
 	}
 
-	if (mt.In(2).Kind() != reflect.Pointer && mt.In(2) != typeOfBytes) || mt.Out(0) != typeOfError {
-		return false
-	}
 	return true
 }

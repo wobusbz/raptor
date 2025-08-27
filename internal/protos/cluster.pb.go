@@ -21,12 +21,74 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type RemoteMessage_Kind int32
+
+const (
+	RemoteMessage_KIND_UNKNOWN               RemoteMessage_Kind = 0
+	RemoteMessage_KIND_RPC                   RemoteMessage_Kind = 1
+	RemoteMessage_KIND_NOTIFY                RemoteMessage_Kind = 2
+	RemoteMessage_KIND_PUSH                  RemoteMessage_Kind = 3
+	RemoteMessage_KIND_ON_SESSION_BIND_UID   RemoteMessage_Kind = 4
+	RemoteMessage_KIND_ON_SESSION_CONNECT    RemoteMessage_Kind = 5
+	RemoteMessage_KIND_ON_SESSION_DISCONNECT RemoteMessage_Kind = 6
+)
+
+// Enum value maps for RemoteMessage_Kind.
+var (
+	RemoteMessage_Kind_name = map[int32]string{
+		0: "KIND_UNKNOWN",
+		1: "KIND_RPC",
+		2: "KIND_NOTIFY",
+		3: "KIND_PUSH",
+		4: "KIND_ON_SESSION_BIND_UID",
+		5: "KIND_ON_SESSION_CONNECT",
+		6: "KIND_ON_SESSION_DISCONNECT",
+	}
+	RemoteMessage_Kind_value = map[string]int32{
+		"KIND_UNKNOWN":               0,
+		"KIND_RPC":                   1,
+		"KIND_NOTIFY":                2,
+		"KIND_PUSH":                  3,
+		"KIND_ON_SESSION_BIND_UID":   4,
+		"KIND_ON_SESSION_CONNECT":    5,
+		"KIND_ON_SESSION_DISCONNECT": 6,
+	}
+)
+
+func (x RemoteMessage_Kind) Enum() *RemoteMessage_Kind {
+	p := new(RemoteMessage_Kind)
+	*p = x
+	return p
+}
+
+func (x RemoteMessage_Kind) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (RemoteMessage_Kind) Descriptor() protoreflect.EnumDescriptor {
+	return file_cluster_proto_enumTypes[0].Descriptor()
+}
+
+func (RemoteMessage_Kind) Type() protoreflect.EnumType {
+	return &file_cluster_proto_enumTypes[0]
+}
+
+func (x RemoteMessage_Kind) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use RemoteMessage_Kind.Descriptor instead.
+func (RemoteMessage_Kind) EnumDescriptor() ([]byte, []int) {
+	return file_cluster_proto_rawDescGZIP(), []int{19, 0}
+}
+
 type ServiceInstance struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ServiceName   string                 `protobuf:"bytes,1,opt,name=service_name,json=serviceName,proto3" json:"service_name,omitempty"`
-	InstanceId    string                 `protobuf:"bytes,2,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
-	Addr          string                 `protobuf:"bytes,3,opt,name=addr,proto3" json:"addr,omitempty"`
-	Messages      map[string]int32       `protobuf:"bytes,4,rep,name=messages,proto3" json:"messages,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	ServiceName   string                 `protobuf:"bytes,1,opt,name=Service_name,json=ServiceName,proto3" json:"Service_name,omitempty"`
+	InstanceId    string                 `protobuf:"bytes,2,opt,name=Instance_id,json=InstanceId,proto3" json:"Instance_id,omitempty"`
+	Addr          string                 `protobuf:"bytes,3,opt,name=Addr,proto3" json:"Addr,omitempty"`
+	Frontend      bool                   `protobuf:"varint,4,opt,name=Frontend,proto3" json:"Frontend,omitempty"`
+	Messages      map[string]int32       `protobuf:"bytes,5,rep,name=Messages,proto3" json:"Messages,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -82,6 +144,13 @@ func (x *ServiceInstance) GetAddr() string {
 	return ""
 }
 
+func (x *ServiceInstance) GetFrontend() bool {
+	if x != nil {
+		return x.Frontend
+	}
+	return false
+}
+
 func (x *ServiceInstance) GetMessages() map[string]int32 {
 	if x != nil {
 		return x.Messages
@@ -91,7 +160,7 @@ func (x *ServiceInstance) GetMessages() map[string]int32 {
 
 type RegisterRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Instances     *ServiceInstance       `protobuf:"bytes,1,opt,name=instances,proto3" json:"instances,omitempty"`
+	Instances     *ServiceInstance       `protobuf:"bytes,1,opt,name=Instances,proto3" json:"Instances,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -171,7 +240,7 @@ func (*RegisterResponse) Descriptor() ([]byte, []int) {
 
 type DeregisterRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Instances     *ServiceInstance       `protobuf:"bytes,1,opt,name=instances,proto3" json:"instances,omitempty"`
+	Instances     *ServiceInstance       `protobuf:"bytes,1,opt,name=Instances,proto3" json:"Instances,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -251,7 +320,7 @@ func (*DeregisterResponse) Descriptor() ([]byte, []int) {
 
 type DiscoveryRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ServiceName   string                 `protobuf:"bytes,1,opt,name=service_name,json=serviceName,proto3" json:"service_name,omitempty"`
+	ServiceName   string                 `protobuf:"bytes,1,opt,name=Service_name,json=ServiceName,proto3" json:"Service_name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -295,7 +364,7 @@ func (x *DiscoveryRequest) GetServiceName() string {
 
 type DiscoveryResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Instances     []*ServiceInstance     `protobuf:"bytes,1,rep,name=instances,proto3" json:"instances,omitempty"`
+	Instances     []*ServiceInstance     `protobuf:"bytes,1,rep,name=Instances,proto3" json:"Instances,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -339,8 +408,7 @@ func (x *DiscoveryResponse) GetInstances() []*ServiceInstance {
 
 type HeartbeatRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ServiceName   string                 `protobuf:"bytes,1,opt,name=service_name,json=serviceName,proto3" json:"service_name,omitempty"`
-	InstanceId    string                 `protobuf:"bytes,2,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
+	Instances     *ServiceInstance       `protobuf:"bytes,1,opt,name=Instances,proto3" json:"Instances,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -375,18 +443,11 @@ func (*HeartbeatRequest) Descriptor() ([]byte, []int) {
 	return file_cluster_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *HeartbeatRequest) GetServiceName() string {
+func (x *HeartbeatRequest) GetInstances() *ServiceInstance {
 	if x != nil {
-		return x.ServiceName
+		return x.Instances
 	}
-	return ""
-}
-
-func (x *HeartbeatRequest) GetInstanceId() string {
-	if x != nil {
-		return x.InstanceId
-	}
-	return ""
+	return nil
 }
 
 type HeartbeatResponse struct {
@@ -427,7 +488,7 @@ func (*HeartbeatResponse) Descriptor() ([]byte, []int) {
 
 type NewMembersRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Instances     *ServiceInstance       `protobuf:"bytes,1,opt,name=instances,proto3" json:"instances,omitempty"`
+	Instances     *ServiceInstance       `protobuf:"bytes,1,opt,name=Instances,proto3" json:"Instances,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -507,8 +568,8 @@ func (*NewMembersResponse) Descriptor() ([]byte, []int) {
 
 type DelMembersRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ServiceName   string                 `protobuf:"bytes,1,opt,name=service_name,json=serviceName,proto3" json:"service_name,omitempty"`
-	InstanceId    string                 `protobuf:"bytes,2,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
+	ServiceName   string                 `protobuf:"bytes,1,opt,name=Service_name,json=ServiceName,proto3" json:"Service_name,omitempty"`
+	InstanceId    string                 `protobuf:"bytes,2,opt,name=Instance_id,json=InstanceId,proto3" json:"Instance_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -559,8 +620,8 @@ func (x *DelMembersRequest) GetInstanceId() string {
 
 type DelMembersResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ServiceName   string                 `protobuf:"bytes,1,opt,name=service_name,json=serviceName,proto3" json:"service_name,omitempty"`
-	InstanceId    string                 `protobuf:"bytes,2,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
+	ServiceName   string                 `protobuf:"bytes,1,opt,name=Service_name,json=ServiceName,proto3" json:"Service_name,omitempty"`
+	InstanceId    string                 `protobuf:"bytes,2,opt,name=Instance_id,json=InstanceId,proto3" json:"Instance_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -609,29 +670,30 @@ func (x *DelMembersResponse) GetInstanceId() string {
 	return ""
 }
 
-type CallRequest struct {
+type RPCMessage struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	InstanceId    string                 `protobuf:"bytes,1,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
-	SessionId     int64                  `protobuf:"varint,2,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
-	Data          []byte                 `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
+	SessionID     int64                  `protobuf:"varint,1,opt,name=SessionID,proto3" json:"SessionID,omitempty"`
+	Seq           int64                  `protobuf:"varint,2,opt,name=Seq,proto3" json:"Seq,omitempty"`
+	Data          []byte                 `protobuf:"bytes,3,opt,name=Data,proto3" json:"Data,omitempty"`
+	Route         string                 `protobuf:"bytes,4,opt,name=Route,proto3" json:"Route,omitempty"` // User/C2SLogin
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CallRequest) Reset() {
-	*x = CallRequest{}
+func (x *RPCMessage) Reset() {
+	*x = RPCMessage{}
 	mi := &file_cluster_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CallRequest) String() string {
+func (x *RPCMessage) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CallRequest) ProtoMessage() {}
+func (*RPCMessage) ProtoMessage() {}
 
-func (x *CallRequest) ProtoReflect() protoreflect.Message {
+func (x *RPCMessage) ProtoReflect() protoreflect.Message {
 	mi := &file_cluster_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -643,53 +705,62 @@ func (x *CallRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CallRequest.ProtoReflect.Descriptor instead.
-func (*CallRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use RPCMessage.ProtoReflect.Descriptor instead.
+func (*RPCMessage) Descriptor() ([]byte, []int) {
 	return file_cluster_proto_rawDescGZIP(), []int{13}
 }
 
-func (x *CallRequest) GetInstanceId() string {
+func (x *RPCMessage) GetSessionID() int64 {
 	if x != nil {
-		return x.InstanceId
-	}
-	return ""
-}
-
-func (x *CallRequest) GetSessionId() int64 {
-	if x != nil {
-		return x.SessionId
+		return x.SessionID
 	}
 	return 0
 }
 
-func (x *CallRequest) GetData() []byte {
+func (x *RPCMessage) GetSeq() int64 {
+	if x != nil {
+		return x.Seq
+	}
+	return 0
+}
+
+func (x *RPCMessage) GetData() []byte {
 	if x != nil {
 		return x.Data
 	}
 	return nil
 }
 
-type CallResponse struct {
+func (x *RPCMessage) GetRoute() string {
+	if x != nil {
+		return x.Route
+	}
+	return ""
+}
+
+type NotifyMessage struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Data          []byte                 `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
+	SessionID     int64                  `protobuf:"varint,1,opt,name=SessionID,proto3" json:"SessionID,omitempty"`
+	Data          []byte                 `protobuf:"bytes,2,opt,name=Data,proto3" json:"Data,omitempty"`
+	Route         string                 `protobuf:"bytes,3,opt,name=Route,proto3" json:"Route,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CallResponse) Reset() {
-	*x = CallResponse{}
+func (x *NotifyMessage) Reset() {
+	*x = NotifyMessage{}
 	mi := &file_cluster_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CallResponse) String() string {
+func (x *NotifyMessage) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CallResponse) ProtoMessage() {}
+func (*NotifyMessage) ProtoMessage() {}
 
-func (x *CallResponse) ProtoReflect() protoreflect.Message {
+func (x *NotifyMessage) ProtoReflect() protoreflect.Message {
 	mi := &file_cluster_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -701,98 +772,106 @@ func (x *CallResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CallResponse.ProtoReflect.Descriptor instead.
-func (*CallResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use NotifyMessage.ProtoReflect.Descriptor instead.
+func (*NotifyMessage) Descriptor() ([]byte, []int) {
 	return file_cluster_proto_rawDescGZIP(), []int{14}
 }
 
-func (x *CallResponse) GetData() []byte {
+func (x *NotifyMessage) GetSessionID() int64 {
 	if x != nil {
-		return x.Data
-	}
-	return nil
-}
-
-type NotifyRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	InstanceId    string                 `protobuf:"bytes,1,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
-	SessionId     int64                  `protobuf:"varint,2,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
-	Data          []byte                 `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *NotifyRequest) Reset() {
-	*x = NotifyRequest{}
-	mi := &file_cluster_proto_msgTypes[15]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *NotifyRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*NotifyRequest) ProtoMessage() {}
-
-func (x *NotifyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_cluster_proto_msgTypes[15]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use NotifyRequest.ProtoReflect.Descriptor instead.
-func (*NotifyRequest) Descriptor() ([]byte, []int) {
-	return file_cluster_proto_rawDescGZIP(), []int{15}
-}
-
-func (x *NotifyRequest) GetInstanceId() string {
-	if x != nil {
-		return x.InstanceId
-	}
-	return ""
-}
-
-func (x *NotifyRequest) GetSessionId() int64 {
-	if x != nil {
-		return x.SessionId
+		return x.SessionID
 	}
 	return 0
 }
 
-func (x *NotifyRequest) GetData() []byte {
+func (x *NotifyMessage) GetData() []byte {
 	if x != nil {
 		return x.Data
 	}
 	return nil
 }
 
-type NotifyResponse struct {
+func (x *NotifyMessage) GetRoute() string {
+	if x != nil {
+		return x.Route
+	}
+	return ""
+}
+
+type PushMessage struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionID     int64                  `protobuf:"varint,1,opt,name=SessionID,proto3" json:"SessionID,omitempty"`
+	Data          []byte                 `protobuf:"bytes,2,opt,name=Data,proto3" json:"Data,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *NotifyResponse) Reset() {
-	*x = NotifyResponse{}
+func (x *PushMessage) Reset() {
+	*x = PushMessage{}
+	mi := &file_cluster_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PushMessage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PushMessage) ProtoMessage() {}
+
+func (x *PushMessage) ProtoReflect() protoreflect.Message {
+	mi := &file_cluster_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PushMessage.ProtoReflect.Descriptor instead.
+func (*PushMessage) Descriptor() ([]byte, []int) {
+	return file_cluster_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *PushMessage) GetSessionID() int64 {
+	if x != nil {
+		return x.SessionID
+	}
+	return 0
+}
+
+func (x *PushMessage) GetData() []byte {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
+type OnSessionBindUIDMessage struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionID     int64                  `protobuf:"varint,1,opt,name=SessionID,proto3" json:"SessionID,omitempty"`
+	UID           int64                  `protobuf:"varint,2,opt,name=UID,proto3" json:"UID,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *OnSessionBindUIDMessage) Reset() {
+	*x = OnSessionBindUIDMessage{}
 	mi := &file_cluster_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *NotifyResponse) String() string {
+func (x *OnSessionBindUIDMessage) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*NotifyResponse) ProtoMessage() {}
+func (*OnSessionBindUIDMessage) ProtoMessage() {}
 
-func (x *NotifyResponse) ProtoReflect() protoreflect.Message {
+func (x *OnSessionBindUIDMessage) ProtoReflect() protoreflect.Message {
 	mi := &file_cluster_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -804,66 +883,294 @@ func (x *NotifyResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use NotifyResponse.ProtoReflect.Descriptor instead.
-func (*NotifyResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use OnSessionBindUIDMessage.ProtoReflect.Descriptor instead.
+func (*OnSessionBindUIDMessage) Descriptor() ([]byte, []int) {
 	return file_cluster_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *OnSessionBindUIDMessage) GetSessionID() int64 {
+	if x != nil {
+		return x.SessionID
+	}
+	return 0
+}
+
+func (x *OnSessionBindUIDMessage) GetUID() int64 {
+	if x != nil {
+		return x.UID
+	}
+	return 0
+}
+
+type OnSessionConnectMessage struct {
+	state         protoimpl.MessageState      `protogen:"open.v1"`
+	UID           int64                       `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
+	Instances     map[string]*ServiceInstance `protobuf:"bytes,2,rep,name=Instances,proto3" json:"Instances,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *OnSessionConnectMessage) Reset() {
+	*x = OnSessionConnectMessage{}
+	mi := &file_cluster_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OnSessionConnectMessage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OnSessionConnectMessage) ProtoMessage() {}
+
+func (x *OnSessionConnectMessage) ProtoReflect() protoreflect.Message {
+	mi := &file_cluster_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OnSessionConnectMessage.ProtoReflect.Descriptor instead.
+func (*OnSessionConnectMessage) Descriptor() ([]byte, []int) {
+	return file_cluster_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *OnSessionConnectMessage) GetUID() int64 {
+	if x != nil {
+		return x.UID
+	}
+	return 0
+}
+
+func (x *OnSessionConnectMessage) GetInstances() map[string]*ServiceInstance {
+	if x != nil {
+		return x.Instances
+	}
+	return nil
+}
+
+type OnSessionDisconnectionMessage struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UID           int64                  `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *OnSessionDisconnectionMessage) Reset() {
+	*x = OnSessionDisconnectionMessage{}
+	mi := &file_cluster_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OnSessionDisconnectionMessage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OnSessionDisconnectionMessage) ProtoMessage() {}
+
+func (x *OnSessionDisconnectionMessage) ProtoReflect() protoreflect.Message {
+	mi := &file_cluster_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OnSessionDisconnectionMessage.ProtoReflect.Descriptor instead.
+func (*OnSessionDisconnectionMessage) Descriptor() ([]byte, []int) {
+	return file_cluster_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *OnSessionDisconnectionMessage) GetUID() int64 {
+	if x != nil {
+		return x.UID
+	}
+	return 0
+}
+
+type RemoteMessage struct {
+	state                         protoimpl.MessageState         `protogen:"open.v1"`
+	Kind                          RemoteMessage_Kind             `protobuf:"varint,1,opt,name=kind,proto3,enum=protos.RemoteMessage_Kind" json:"kind,omitempty"`
+	RPCMessage                    *RPCMessage                    `protobuf:"bytes,2,opt,name=RPCMessage,proto3" json:"RPCMessage,omitempty"`
+	NotifyMessage                 *NotifyMessage                 `protobuf:"bytes,3,opt,name=NotifyMessage,proto3" json:"NotifyMessage,omitempty"`
+	PushMessage                   *PushMessage                   `protobuf:"bytes,4,opt,name=PushMessage,proto3" json:"PushMessage,omitempty"`
+	OnSessionBindUIDMessage       *OnSessionBindUIDMessage       `protobuf:"bytes,5,opt,name=OnSessionBindUIDMessage,proto3" json:"OnSessionBindUIDMessage,omitempty"`
+	OnSessionConnectMessage       *OnSessionConnectMessage       `protobuf:"bytes,6,opt,name=OnSessionConnectMessage,proto3" json:"OnSessionConnectMessage,omitempty"`
+	OnSessionDisconnectionMessage *OnSessionDisconnectionMessage `protobuf:"bytes,7,opt,name=OnSessionDisconnectionMessage,proto3" json:"OnSessionDisconnectionMessage,omitempty"`
+	unknownFields                 protoimpl.UnknownFields
+	sizeCache                     protoimpl.SizeCache
+}
+
+func (x *RemoteMessage) Reset() {
+	*x = RemoteMessage{}
+	mi := &file_cluster_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RemoteMessage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RemoteMessage) ProtoMessage() {}
+
+func (x *RemoteMessage) ProtoReflect() protoreflect.Message {
+	mi := &file_cluster_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RemoteMessage.ProtoReflect.Descriptor instead.
+func (*RemoteMessage) Descriptor() ([]byte, []int) {
+	return file_cluster_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *RemoteMessage) GetKind() RemoteMessage_Kind {
+	if x != nil {
+		return x.Kind
+	}
+	return RemoteMessage_KIND_UNKNOWN
+}
+
+func (x *RemoteMessage) GetRPCMessage() *RPCMessage {
+	if x != nil {
+		return x.RPCMessage
+	}
+	return nil
+}
+
+func (x *RemoteMessage) GetNotifyMessage() *NotifyMessage {
+	if x != nil {
+		return x.NotifyMessage
+	}
+	return nil
+}
+
+func (x *RemoteMessage) GetPushMessage() *PushMessage {
+	if x != nil {
+		return x.PushMessage
+	}
+	return nil
+}
+
+func (x *RemoteMessage) GetOnSessionBindUIDMessage() *OnSessionBindUIDMessage {
+	if x != nil {
+		return x.OnSessionBindUIDMessage
+	}
+	return nil
+}
+
+func (x *RemoteMessage) GetOnSessionConnectMessage() *OnSessionConnectMessage {
+	if x != nil {
+		return x.OnSessionConnectMessage
+	}
+	return nil
+}
+
+func (x *RemoteMessage) GetOnSessionDisconnectionMessage() *OnSessionDisconnectionMessage {
+	if x != nil {
+		return x.OnSessionDisconnectionMessage
+	}
+	return nil
 }
 
 var File_cluster_proto protoreflect.FileDescriptor
 
 const file_cluster_proto_rawDesc = "" +
 	"\n" +
-	"\rcluster.proto\x12\x06protos\"\xe9\x01\n" +
+	"\rcluster.proto\x12\x06protos\"\x85\x02\n" +
 	"\x0fServiceInstance\x12!\n" +
-	"\fservice_name\x18\x01 \x01(\tR\vserviceName\x12\x1f\n" +
-	"\vinstance_id\x18\x02 \x01(\tR\n" +
-	"instanceId\x12\x12\n" +
-	"\x04addr\x18\x03 \x01(\tR\x04addr\x12A\n" +
-	"\bmessages\x18\x04 \x03(\v2%.protos.ServiceInstance.MessagesEntryR\bmessages\x1a;\n" +
+	"\fService_name\x18\x01 \x01(\tR\vServiceName\x12\x1f\n" +
+	"\vInstance_id\x18\x02 \x01(\tR\n" +
+	"InstanceId\x12\x12\n" +
+	"\x04Addr\x18\x03 \x01(\tR\x04Addr\x12\x1a\n" +
+	"\bFrontend\x18\x04 \x01(\bR\bFrontend\x12A\n" +
+	"\bMessages\x18\x05 \x03(\v2%.protos.ServiceInstance.MessagesEntryR\bMessages\x1a;\n" +
 	"\rMessagesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\"H\n" +
 	"\x0fRegisterRequest\x125\n" +
-	"\tinstances\x18\x01 \x01(\v2\x17.protos.ServiceInstanceR\tinstances\"\x12\n" +
+	"\tInstances\x18\x01 \x01(\v2\x17.protos.ServiceInstanceR\tInstances\"\x12\n" +
 	"\x10RegisterResponse\"J\n" +
 	"\x11DeregisterRequest\x125\n" +
-	"\tinstances\x18\x01 \x01(\v2\x17.protos.ServiceInstanceR\tinstances\"\x14\n" +
+	"\tInstances\x18\x01 \x01(\v2\x17.protos.ServiceInstanceR\tInstances\"\x14\n" +
 	"\x12DeregisterResponse\"5\n" +
 	"\x10DiscoveryRequest\x12!\n" +
-	"\fservice_name\x18\x01 \x01(\tR\vserviceName\"J\n" +
+	"\fService_name\x18\x01 \x01(\tR\vServiceName\"J\n" +
 	"\x11DiscoveryResponse\x125\n" +
-	"\tinstances\x18\x01 \x03(\v2\x17.protos.ServiceInstanceR\tinstances\"V\n" +
-	"\x10HeartbeatRequest\x12!\n" +
-	"\fservice_name\x18\x01 \x01(\tR\vserviceName\x12\x1f\n" +
-	"\vinstance_id\x18\x02 \x01(\tR\n" +
-	"instanceId\"\x13\n" +
+	"\tInstances\x18\x01 \x03(\v2\x17.protos.ServiceInstanceR\tInstances\"I\n" +
+	"\x10HeartbeatRequest\x125\n" +
+	"\tInstances\x18\x01 \x01(\v2\x17.protos.ServiceInstanceR\tInstances\"\x13\n" +
 	"\x11HeartbeatResponse\"J\n" +
 	"\x11NewMembersRequest\x125\n" +
-	"\tinstances\x18\x01 \x01(\v2\x17.protos.ServiceInstanceR\tinstances\"\x14\n" +
+	"\tInstances\x18\x01 \x01(\v2\x17.protos.ServiceInstanceR\tInstances\"\x14\n" +
 	"\x12NewMembersResponse\"W\n" +
 	"\x11DelMembersRequest\x12!\n" +
-	"\fservice_name\x18\x01 \x01(\tR\vserviceName\x12\x1f\n" +
-	"\vinstance_id\x18\x02 \x01(\tR\n" +
-	"instanceId\"X\n" +
+	"\fService_name\x18\x01 \x01(\tR\vServiceName\x12\x1f\n" +
+	"\vInstance_id\x18\x02 \x01(\tR\n" +
+	"InstanceId\"X\n" +
 	"\x12DelMembersResponse\x12!\n" +
-	"\fservice_name\x18\x01 \x01(\tR\vserviceName\x12\x1f\n" +
-	"\vinstance_id\x18\x02 \x01(\tR\n" +
-	"instanceId\"a\n" +
-	"\vCallRequest\x12\x1f\n" +
-	"\vinstance_id\x18\x01 \x01(\tR\n" +
-	"instanceId\x12\x1d\n" +
+	"\fService_name\x18\x01 \x01(\tR\vServiceName\x12\x1f\n" +
+	"\vInstance_id\x18\x02 \x01(\tR\n" +
+	"InstanceId\"f\n" +
 	"\n" +
-	"session_id\x18\x02 \x01(\x03R\tsessionId\x12\x12\n" +
-	"\x04data\x18\x03 \x01(\fR\x04data\"\"\n" +
-	"\fCallResponse\x12\x12\n" +
-	"\x04data\x18\x03 \x01(\fR\x04data\"c\n" +
-	"\rNotifyRequest\x12\x1f\n" +
-	"\vinstance_id\x18\x01 \x01(\tR\n" +
-	"instanceId\x12\x1d\n" +
+	"RPCMessage\x12\x1c\n" +
+	"\tSessionID\x18\x01 \x01(\x03R\tSessionID\x12\x10\n" +
+	"\x03Seq\x18\x02 \x01(\x03R\x03Seq\x12\x12\n" +
+	"\x04Data\x18\x03 \x01(\fR\x04Data\x12\x14\n" +
+	"\x05Route\x18\x04 \x01(\tR\x05Route\"W\n" +
+	"\rNotifyMessage\x12\x1c\n" +
+	"\tSessionID\x18\x01 \x01(\x03R\tSessionID\x12\x12\n" +
+	"\x04Data\x18\x02 \x01(\fR\x04Data\x12\x14\n" +
+	"\x05Route\x18\x03 \x01(\tR\x05Route\"?\n" +
+	"\vPushMessage\x12\x1c\n" +
+	"\tSessionID\x18\x01 \x01(\x03R\tSessionID\x12\x12\n" +
+	"\x04Data\x18\x02 \x01(\fR\x04Data\"I\n" +
+	"\x17OnSessionBindUIDMessage\x12\x1c\n" +
+	"\tSessionID\x18\x01 \x01(\x03R\tSessionID\x12\x10\n" +
+	"\x03UID\x18\x02 \x01(\x03R\x03UID\"\xd0\x01\n" +
+	"\x17OnSessionConnectMessage\x12\x10\n" +
+	"\x03UID\x18\x01 \x01(\x03R\x03UID\x12L\n" +
+	"\tInstances\x18\x02 \x03(\v2..protos.OnSessionConnectMessage.InstancesEntryR\tInstances\x1aU\n" +
+	"\x0eInstancesEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12-\n" +
+	"\x05value\x18\x02 \x01(\v2\x17.protos.ServiceInstanceR\x05value:\x028\x01\"1\n" +
+	"\x1dOnSessionDisconnectionMessage\x12\x10\n" +
+	"\x03UID\x18\x01 \x01(\x03R\x03UID\"\xae\x05\n" +
+	"\rRemoteMessage\x12.\n" +
+	"\x04kind\x18\x01 \x01(\x0e2\x1a.protos.RemoteMessage.KindR\x04kind\x122\n" +
 	"\n" +
-	"session_id\x18\x02 \x01(\x03R\tsessionId\x12\x12\n" +
-	"\x04data\x18\x03 \x01(\fR\x04data\"\x10\n" +
-	"\x0eNotifyResponse2\x97\x02\n" +
+	"RPCMessage\x18\x02 \x01(\v2\x12.protos.RPCMessageR\n" +
+	"RPCMessage\x12;\n" +
+	"\rNotifyMessage\x18\x03 \x01(\v2\x15.protos.NotifyMessageR\rNotifyMessage\x125\n" +
+	"\vPushMessage\x18\x04 \x01(\v2\x13.protos.PushMessageR\vPushMessage\x12Y\n" +
+	"\x17OnSessionBindUIDMessage\x18\x05 \x01(\v2\x1f.protos.OnSessionBindUIDMessageR\x17OnSessionBindUIDMessage\x12Y\n" +
+	"\x17OnSessionConnectMessage\x18\x06 \x01(\v2\x1f.protos.OnSessionConnectMessageR\x17OnSessionConnectMessage\x12k\n" +
+	"\x1dOnSessionDisconnectionMessage\x18\a \x01(\v2%.protos.OnSessionDisconnectionMessageR\x1dOnSessionDisconnectionMessage\"\xa1\x01\n" +
+	"\x04Kind\x12\x10\n" +
+	"\fKIND_UNKNOWN\x10\x00\x12\f\n" +
+	"\bKIND_RPC\x10\x01\x12\x0f\n" +
+	"\vKIND_NOTIFY\x10\x02\x12\r\n" +
+	"\tKIND_PUSH\x10\x03\x12\x1c\n" +
+	"\x18KIND_ON_SESSION_BIND_UID\x10\x04\x12\x1b\n" +
+	"\x17KIND_ON_SESSION_CONNECT\x10\x05\x12\x1e\n" +
+	"\x1aKIND_ON_SESSION_DISCONNECT\x10\x062\x97\x02\n" +
 	"\x0eRegistryServer\x12=\n" +
 	"\bRegister\x12\x17.protos.RegisterRequest\x1a\x18.protos.RegisterResponse\x12C\n" +
 	"\n" +
@@ -874,10 +1181,9 @@ const file_cluster_proto_rawDesc = "" +
 	"\n" +
 	"NewMembers\x12\x19.protos.NewMembersRequest\x1a\x1a.protos.NewMembersResponse\x12C\n" +
 	"\n" +
-	"DelMembers\x12\x19.protos.DelMembersRequest\x1a\x1a.protos.DelMembersResponse2z\n" +
-	"\fRemoteServer\x121\n" +
-	"\x04Call\x12\x13.protos.CallRequest\x1a\x14.protos.CallResponse\x127\n" +
-	"\x06Notify\x12\x15.protos.NotifyRequest\x1a\x16.protos.NotifyResponseB\tZ\a/protosb\x06proto3"
+	"DelMembers\x12\x19.protos.DelMembersRequest\x1a\x1a.protos.DelMembersResponse2I\n" +
+	"\fRemoteServer\x129\n" +
+	"\aReceive\x12\x15.protos.RemoteMessage\x1a\x15.protos.RemoteMessage(\x01B\tZ\a/protosb\x06proto3"
 
 var (
 	file_cluster_proto_rawDescOnce sync.Once
@@ -891,54 +1197,68 @@ func file_cluster_proto_rawDescGZIP() []byte {
 	return file_cluster_proto_rawDescData
 }
 
-var file_cluster_proto_msgTypes = make([]protoimpl.MessageInfo, 18)
+var file_cluster_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_cluster_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_cluster_proto_goTypes = []any{
-	(*ServiceInstance)(nil),    // 0: protos.ServiceInstance
-	(*RegisterRequest)(nil),    // 1: protos.RegisterRequest
-	(*RegisterResponse)(nil),   // 2: protos.RegisterResponse
-	(*DeregisterRequest)(nil),  // 3: protos.DeregisterRequest
-	(*DeregisterResponse)(nil), // 4: protos.DeregisterResponse
-	(*DiscoveryRequest)(nil),   // 5: protos.DiscoveryRequest
-	(*DiscoveryResponse)(nil),  // 6: protos.DiscoveryResponse
-	(*HeartbeatRequest)(nil),   // 7: protos.HeartbeatRequest
-	(*HeartbeatResponse)(nil),  // 8: protos.HeartbeatResponse
-	(*NewMembersRequest)(nil),  // 9: protos.NewMembersRequest
-	(*NewMembersResponse)(nil), // 10: protos.NewMembersResponse
-	(*DelMembersRequest)(nil),  // 11: protos.DelMembersRequest
-	(*DelMembersResponse)(nil), // 12: protos.DelMembersResponse
-	(*CallRequest)(nil),        // 13: protos.CallRequest
-	(*CallResponse)(nil),       // 14: protos.CallResponse
-	(*NotifyRequest)(nil),      // 15: protos.NotifyRequest
-	(*NotifyResponse)(nil),     // 16: protos.NotifyResponse
-	nil,                        // 17: protos.ServiceInstance.MessagesEntry
+	(RemoteMessage_Kind)(0),               // 0: protos.RemoteMessage.Kind
+	(*ServiceInstance)(nil),               // 1: protos.ServiceInstance
+	(*RegisterRequest)(nil),               // 2: protos.RegisterRequest
+	(*RegisterResponse)(nil),              // 3: protos.RegisterResponse
+	(*DeregisterRequest)(nil),             // 4: protos.DeregisterRequest
+	(*DeregisterResponse)(nil),            // 5: protos.DeregisterResponse
+	(*DiscoveryRequest)(nil),              // 6: protos.DiscoveryRequest
+	(*DiscoveryResponse)(nil),             // 7: protos.DiscoveryResponse
+	(*HeartbeatRequest)(nil),              // 8: protos.HeartbeatRequest
+	(*HeartbeatResponse)(nil),             // 9: protos.HeartbeatResponse
+	(*NewMembersRequest)(nil),             // 10: protos.NewMembersRequest
+	(*NewMembersResponse)(nil),            // 11: protos.NewMembersResponse
+	(*DelMembersRequest)(nil),             // 12: protos.DelMembersRequest
+	(*DelMembersResponse)(nil),            // 13: protos.DelMembersResponse
+	(*RPCMessage)(nil),                    // 14: protos.RPCMessage
+	(*NotifyMessage)(nil),                 // 15: protos.NotifyMessage
+	(*PushMessage)(nil),                   // 16: protos.PushMessage
+	(*OnSessionBindUIDMessage)(nil),       // 17: protos.OnSessionBindUIDMessage
+	(*OnSessionConnectMessage)(nil),       // 18: protos.OnSessionConnectMessage
+	(*OnSessionDisconnectionMessage)(nil), // 19: protos.OnSessionDisconnectionMessage
+	(*RemoteMessage)(nil),                 // 20: protos.RemoteMessage
+	nil,                                   // 21: protos.ServiceInstance.MessagesEntry
+	nil,                                   // 22: protos.OnSessionConnectMessage.InstancesEntry
 }
 var file_cluster_proto_depIdxs = []int32{
-	17, // 0: protos.ServiceInstance.messages:type_name -> protos.ServiceInstance.MessagesEntry
-	0,  // 1: protos.RegisterRequest.instances:type_name -> protos.ServiceInstance
-	0,  // 2: protos.DeregisterRequest.instances:type_name -> protos.ServiceInstance
-	0,  // 3: protos.DiscoveryResponse.instances:type_name -> protos.ServiceInstance
-	0,  // 4: protos.NewMembersRequest.instances:type_name -> protos.ServiceInstance
-	1,  // 5: protos.RegistryServer.Register:input_type -> protos.RegisterRequest
-	3,  // 6: protos.RegistryServer.Deregister:input_type -> protos.DeregisterRequest
-	5,  // 7: protos.RegistryServer.Discover:input_type -> protos.DiscoveryRequest
-	7,  // 8: protos.RegistryServer.Heartbeat:input_type -> protos.HeartbeatRequest
-	9,  // 9: protos.MembersServer.NewMembers:input_type -> protos.NewMembersRequest
-	11, // 10: protos.MembersServer.DelMembers:input_type -> protos.DelMembersRequest
-	13, // 11: protos.RemoteServer.Call:input_type -> protos.CallRequest
-	15, // 12: protos.RemoteServer.Notify:input_type -> protos.NotifyRequest
-	2,  // 13: protos.RegistryServer.Register:output_type -> protos.RegisterResponse
-	4,  // 14: protos.RegistryServer.Deregister:output_type -> protos.DeregisterResponse
-	6,  // 15: protos.RegistryServer.Discover:output_type -> protos.DiscoveryResponse
-	8,  // 16: protos.RegistryServer.Heartbeat:output_type -> protos.HeartbeatResponse
-	10, // 17: protos.MembersServer.NewMembers:output_type -> protos.NewMembersResponse
-	12, // 18: protos.MembersServer.DelMembers:output_type -> protos.DelMembersResponse
-	14, // 19: protos.RemoteServer.Call:output_type -> protos.CallResponse
-	16, // 20: protos.RemoteServer.Notify:output_type -> protos.NotifyResponse
-	13, // [13:21] is the sub-list for method output_type
-	5,  // [5:13] is the sub-list for method input_type
-	5,  // [5:5] is the sub-list for extension type_name
-	5,  // [5:5] is the sub-list for extension extendee
-	0,  // [0:5] is the sub-list for field type_name
+	21, // 0: protos.ServiceInstance.Messages:type_name -> protos.ServiceInstance.MessagesEntry
+	1,  // 1: protos.RegisterRequest.Instances:type_name -> protos.ServiceInstance
+	1,  // 2: protos.DeregisterRequest.Instances:type_name -> protos.ServiceInstance
+	1,  // 3: protos.DiscoveryResponse.Instances:type_name -> protos.ServiceInstance
+	1,  // 4: protos.HeartbeatRequest.Instances:type_name -> protos.ServiceInstance
+	1,  // 5: protos.NewMembersRequest.Instances:type_name -> protos.ServiceInstance
+	22, // 6: protos.OnSessionConnectMessage.Instances:type_name -> protos.OnSessionConnectMessage.InstancesEntry
+	0,  // 7: protos.RemoteMessage.kind:type_name -> protos.RemoteMessage.Kind
+	14, // 8: protos.RemoteMessage.RPCMessage:type_name -> protos.RPCMessage
+	15, // 9: protos.RemoteMessage.NotifyMessage:type_name -> protos.NotifyMessage
+	16, // 10: protos.RemoteMessage.PushMessage:type_name -> protos.PushMessage
+	17, // 11: protos.RemoteMessage.OnSessionBindUIDMessage:type_name -> protos.OnSessionBindUIDMessage
+	18, // 12: protos.RemoteMessage.OnSessionConnectMessage:type_name -> protos.OnSessionConnectMessage
+	19, // 13: protos.RemoteMessage.OnSessionDisconnectionMessage:type_name -> protos.OnSessionDisconnectionMessage
+	1,  // 14: protos.OnSessionConnectMessage.InstancesEntry.value:type_name -> protos.ServiceInstance
+	2,  // 15: protos.RegistryServer.Register:input_type -> protos.RegisterRequest
+	4,  // 16: protos.RegistryServer.Deregister:input_type -> protos.DeregisterRequest
+	6,  // 17: protos.RegistryServer.Discover:input_type -> protos.DiscoveryRequest
+	8,  // 18: protos.RegistryServer.Heartbeat:input_type -> protos.HeartbeatRequest
+	10, // 19: protos.MembersServer.NewMembers:input_type -> protos.NewMembersRequest
+	12, // 20: protos.MembersServer.DelMembers:input_type -> protos.DelMembersRequest
+	20, // 21: protos.RemoteServer.Receive:input_type -> protos.RemoteMessage
+	3,  // 22: protos.RegistryServer.Register:output_type -> protos.RegisterResponse
+	5,  // 23: protos.RegistryServer.Deregister:output_type -> protos.DeregisterResponse
+	7,  // 24: protos.RegistryServer.Discover:output_type -> protos.DiscoveryResponse
+	9,  // 25: protos.RegistryServer.Heartbeat:output_type -> protos.HeartbeatResponse
+	11, // 26: protos.MembersServer.NewMembers:output_type -> protos.NewMembersResponse
+	13, // 27: protos.MembersServer.DelMembers:output_type -> protos.DelMembersResponse
+	20, // 28: protos.RemoteServer.Receive:output_type -> protos.RemoteMessage
+	22, // [22:29] is the sub-list for method output_type
+	15, // [15:22] is the sub-list for method input_type
+	15, // [15:15] is the sub-list for extension type_name
+	15, // [15:15] is the sub-list for extension extendee
+	0,  // [0:15] is the sub-list for field type_name
 }
 
 func init() { file_cluster_proto_init() }
@@ -951,13 +1271,14 @@ func file_cluster_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_cluster_proto_rawDesc), len(file_cluster_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   18,
+			NumEnums:      1,
+			NumMessages:   22,
 			NumExtensions: 0,
 			NumServices:   3,
 		},
 		GoTypes:           file_cluster_proto_goTypes,
 		DependencyIndexes: file_cluster_proto_depIdxs,
+		EnumInfos:         file_cluster_proto_enumTypes,
 		MessageInfos:      file_cluster_proto_msgTypes,
 	}.Build()
 	File_cluster_proto = out.File
