@@ -7,11 +7,12 @@
 package protos
 
 import (
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
+
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -904,7 +905,7 @@ func (x *OnSessionBindUIDMessage) GetUID() int64 {
 
 type OnSessionConnectMessage struct {
 	state         protoimpl.MessageState      `protogen:"open.v1"`
-	UID           int64                       `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
+	ID            int64                       `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
 	Instances     map[string]*ServiceInstance `protobuf:"bytes,2,rep,name=Instances,proto3" json:"Instances,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -940,9 +941,9 @@ func (*OnSessionConnectMessage) Descriptor() ([]byte, []int) {
 	return file_cluster_proto_rawDescGZIP(), []int{17}
 }
 
-func (x *OnSessionConnectMessage) GetUID() int64 {
+func (x *OnSessionConnectMessage) GetID() int64 {
 	if x != nil {
-		return x.UID
+		return x.ID
 	}
 	return 0
 }
@@ -956,7 +957,7 @@ func (x *OnSessionConnectMessage) GetInstances() map[string]*ServiceInstance {
 
 type OnSessionDisconnectionMessage struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	UID           int64                  `protobuf:"varint,1,opt,name=UID,proto3" json:"UID,omitempty"`
+	ID            int64                  `protobuf:"varint,1,opt,name=ID,proto3" json:"ID,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -991,9 +992,9 @@ func (*OnSessionDisconnectionMessage) Descriptor() ([]byte, []int) {
 	return file_cluster_proto_rawDescGZIP(), []int{18}
 }
 
-func (x *OnSessionDisconnectionMessage) GetUID() int64 {
+func (x *OnSessionDisconnectionMessage) GetID() int64 {
 	if x != nil {
-		return x.UID
+		return x.ID
 	}
 	return 0
 }
@@ -1144,15 +1145,15 @@ const file_cluster_proto_rawDesc = "" +
 	"\x04Data\x18\x02 \x01(\fR\x04Data\"I\n" +
 	"\x17OnSessionBindUIDMessage\x12\x1c\n" +
 	"\tSessionID\x18\x01 \x01(\x03R\tSessionID\x12\x10\n" +
-	"\x03UID\x18\x02 \x01(\x03R\x03UID\"\xd0\x01\n" +
-	"\x17OnSessionConnectMessage\x12\x10\n" +
-	"\x03UID\x18\x01 \x01(\x03R\x03UID\x12L\n" +
+	"\x03UID\x18\x02 \x01(\x03R\x03UID\"\xce\x01\n" +
+	"\x17OnSessionConnectMessage\x12\x0e\n" +
+	"\x02ID\x18\x01 \x01(\x03R\x02ID\x12L\n" +
 	"\tInstances\x18\x02 \x03(\v2..protos.OnSessionConnectMessage.InstancesEntryR\tInstances\x1aU\n" +
 	"\x0eInstancesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12-\n" +
-	"\x05value\x18\x02 \x01(\v2\x17.protos.ServiceInstanceR\x05value:\x028\x01\"1\n" +
-	"\x1dOnSessionDisconnectionMessage\x12\x10\n" +
-	"\x03UID\x18\x01 \x01(\x03R\x03UID\"\xae\x05\n" +
+	"\x05value\x18\x02 \x01(\v2\x17.protos.ServiceInstanceR\x05value:\x028\x01\"/\n" +
+	"\x1dOnSessionDisconnectionMessage\x12\x0e\n" +
+	"\x02ID\x18\x01 \x01(\x03R\x02ID\"\xae\x05\n" +
 	"\rRemoteMessage\x12.\n" +
 	"\x04kind\x18\x01 \x01(\x0e2\x1a.protos.RemoteMessage.KindR\x04kind\x122\n" +
 	"\n" +

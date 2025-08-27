@@ -6,12 +6,10 @@ import (
 	"game/internal/protos"
 	"game/networkentity"
 	"log"
-	"net"
 	"sync"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/protobuf/proto"
 )
 
 var _ networkentity.NetworkEntity = (*RemoteClient)(nil)
@@ -54,8 +52,9 @@ func (r *RemoteClient) dispatch() {
 	for {
 		select {
 		case pb := <-r.sendch:
-			if err := r.stream.Send(pb); err != nil {
-				log.Println(err)
+			err := r.stream.Send(pb)
+			if err != nil {
+				return
 			}
 		case <-r.stop:
 			return
@@ -87,18 +86,10 @@ func (r *RemoteClient) RPC(sessionId int64, route string, data []byte) error {
 	return nil
 }
 
-func (r *RemoteClient) Response(modelName, method string, message proto.Message) error {
-	return nil
-}
-
 func (r *RemoteClient) Close() error {
 	r.closeonce.Do(func() {
 		close(r.stop)
 		r.stream.CloseSend()
 	})
-	return nil
-}
-
-func (r *RemoteClient) RemoteAddr() net.Addr {
 	return nil
 }

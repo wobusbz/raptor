@@ -8,6 +8,7 @@ import (
 	"game/internal/codec"
 	"game/internal/message"
 	"game/internal/packet"
+	"game/internal/protos"
 	"game/networkentity"
 	"game/session"
 	"log"
@@ -15,8 +16,6 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
-
-	"google.golang.org/protobuf/proto"
 )
 
 func hrd() []byte {
@@ -84,6 +83,10 @@ func (a *agent) write() {
 		close(a.sendch)
 		a.conn.Close()
 		a.sessionPool.DelSessionByID(a.session.ID())
+		a.session.RPC(&protos.RemoteMessage{
+			Kind:                          protos.RemoteMessage_KIND_ON_SESSION_DISCONNECT,
+			OnSessionDisconnectionMessage: &protos.OnSessionDisconnectionMessage{ID: a.session.ID()},
+		})
 	}()
 	for {
 		select {
@@ -146,12 +149,4 @@ func (a *agent) RPC(sessionId int64, route string, data []byte) error {
 		return fmt.Errorf("[Agent/RPC] Server %s not found", routes[0])
 	}
 	return remoteClient.RPC(sessionId, route, data)
-}
-
-func (a *agent) Response(modelName, method string, message proto.Message) error {
-	return nil
-}
-
-func (a *agent) RemoteAddr() net.Addr {
-	return nil
 }

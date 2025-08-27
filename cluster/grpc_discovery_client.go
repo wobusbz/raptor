@@ -205,7 +205,7 @@ func (c *grpcDiscoveryClient) SelectRemoteClient() (map[string]networkentity.Net
 }
 
 func (c *grpcDiscoveryClient) notifyOnsession(session session.Session, remoteClients map[string]networkentity.NetworkEntity) {
-	onSessionConnectMessage := &protos.OnSessionConnectMessage{UID: session.ID(), Instances: map[string]*protos.ServiceInstance{}}
+	onSessionConnectMessage := &protos.OnSessionConnectMessage{ID: session.ID(), Instances: map[string]*protos.ServiceInstance{}}
 	onSessionConnectMessage.Instances[c.instances.Instances.GetServiceName()] = c.instances.Instances
 	for kname, rs := range remoteClients {
 		rsClient, ok := rs.(*RemoteClient)

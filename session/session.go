@@ -40,7 +40,6 @@ type Session interface {
 	UID() int64
 	Push(message proto.Message) error
 	RPC(message proto.Message) error
-	Response(message proto.Message) error
 	FindRoutes(name string) (networkentity.NetworkEntity, bool)
 	DelRoutes(name string)
 	BindServer(server string, entity networkentity.NetworkEntity)
@@ -107,8 +106,7 @@ func (s *sessionImpl) RPC(message proto.Message) error {
 	return s.entity.RPC(s.id, "CENT/User/C2SLogin", pbdata)
 }
 
-func (s *sessionImpl) Response(message proto.Message) error {
-	return s.entity.Response("", "", nil)
+func (s *sessionImpl) Broadcast(message proto.Message) {
 }
 
 func (s *sessionImpl) FindRoutes(name string) (networkentity.NetworkEntity, bool) {
@@ -149,7 +147,7 @@ func (pool *sessionPoolImpl) OnConnectionNewSession(entity networkentity.Network
 }
 
 func (pool *sessionPoolImpl) GetSessionCount() int64 {
-	return 0
+	return int64(len(pool.sessionManager))
 }
 
 func (pool *sessionPoolImpl) GetSessionByUID(uid string) (Session, bool) {

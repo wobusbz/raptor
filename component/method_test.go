@@ -42,7 +42,7 @@ func (u *User) OnSessionConnect(session session.Session) {
 func TestIsHandlerMethod(t *testing.T) {
 	s := NewService(&User{}, nil)
 	s.ExtractHandler()
-	args := []reflect.Value{s.Receiver, reflect.ValueOf(&testSession{}), reflect.ValueOf(&clusterpb.CloseSessionRequest{SessionId: 11111111})}
+	args := []reflect.Value{s.Receiver, reflect.ValueOf(&testSession{}), reflect.ValueOf(&protos.NewMembersRequest{})}
 	t.Log(s.Handlers["C2SLogin"].Method.Func.Call(args))
 
 	var ss = map[string]int{"a": 1, "b": 2}
