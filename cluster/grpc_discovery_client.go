@@ -248,5 +248,14 @@ func (c *grpcDiscoveryClient) GetRemoteClient(name, addr string) (networkentity.
 }
 
 func (c *grpcDiscoveryClient) Shutdown() {
-	c.closeonce.Do(func() { close(c.stopc) })
+	c.closeonce.Do(func() {
+		close(c.stopc)
+		c.RemoteClientRw.RLock()
+		for _, rc := range c.RemoteClients {
+			for _, rccs := range rc {
+				rccs.Close()
+			}
+		}
+		c.RemoteClientRw.RUnlock()
+	})
 }

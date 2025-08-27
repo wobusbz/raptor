@@ -92,7 +92,10 @@ func (r *RemoteClient) Response(modelName, method string, message proto.Message)
 }
 
 func (r *RemoteClient) Close() error {
-	r.closeonce.Do(func() { close(r.stop) })
+	r.closeonce.Do(func() {
+		close(r.stop)
+		r.stream.CloseSend()
+	})
 	return nil
 }
 

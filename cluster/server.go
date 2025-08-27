@@ -77,12 +77,12 @@ func (s *Server) initFrontend() {
 		return
 	}
 	s.handlerServer = newHandlerServer(s.sessionPool, s.services, s.rpcDiscoveryClient)
-	listener, err := net.Listen("tcp", s.ClientAddr)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer listener.Close()
 	go func() {
+		listener, err := net.Listen("tcp", s.ClientAddr)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer listener.Close()
 		for {
 			conn, err := listener.Accept()
 			if err != nil {
