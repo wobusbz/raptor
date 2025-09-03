@@ -1,11 +1,9 @@
 package main
 
 import (
-	"game/cluster"
 	"game/internal/protos"
 	"game/session"
 	"log"
-	"os"
 )
 
 type User struct {
@@ -33,11 +31,4 @@ func (u *User) OnSessionConnect(session session.Session) {
 
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
-	s := cluster.Server{ServerAddr: os.Args[1], Options: cluster.Options{IsMaster: true, Name: os.Args[2]}}
-	if err := s.Startup(); err != nil {
-		log.Fatal(err)
-		return
-	}
-	s.Register(&User{})
-	s.Shutdown()
 }

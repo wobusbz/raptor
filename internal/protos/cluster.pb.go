@@ -7,12 +7,11 @@
 package protos
 
 import (
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
-
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -676,7 +675,10 @@ type RPCMessage struct {
 	SessionID     int64                  `protobuf:"varint,1,opt,name=SessionID,proto3" json:"SessionID,omitempty"`
 	Seq           int64                  `protobuf:"varint,2,opt,name=Seq,proto3" json:"Seq,omitempty"`
 	Data          []byte                 `protobuf:"bytes,3,opt,name=Data,proto3" json:"Data,omitempty"`
-	Route         string                 `protobuf:"bytes,4,opt,name=Route,proto3" json:"Route,omitempty"` // User/C2SLogin
+	Route         string                 `protobuf:"bytes,4,opt,name=Route,proto3" json:"Route,omitempty"`         // User/C2SLogin
+	SvrName       string                 `protobuf:"bytes,5,opt,name=SvrName,proto3" json:"SvrName,omitempty"`     // User/C2SLogin
+	ModelName     string                 `protobuf:"bytes,6,opt,name=ModelName,proto3" json:"ModelName,omitempty"` // User/C2SLogin
+	FuncName      string                 `protobuf:"bytes,7,opt,name=FuncName,proto3" json:"FuncName,omitempty"`   // User/C2SLogin
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -735,6 +737,27 @@ func (x *RPCMessage) GetData() []byte {
 func (x *RPCMessage) GetRoute() string {
 	if x != nil {
 		return x.Route
+	}
+	return ""
+}
+
+func (x *RPCMessage) GetSvrName() string {
+	if x != nil {
+		return x.SvrName
+	}
+	return ""
+}
+
+func (x *RPCMessage) GetModelName() string {
+	if x != nil {
+		return x.ModelName
+	}
+	return ""
+}
+
+func (x *RPCMessage) GetFuncName() string {
+	if x != nil {
+		return x.FuncName
 	}
 	return ""
 }
@@ -802,7 +825,8 @@ func (x *NotifyMessage) GetRoute() string {
 type PushMessage struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	SessionID     int64                  `protobuf:"varint,1,opt,name=SessionID,proto3" json:"SessionID,omitempty"`
-	Data          []byte                 `protobuf:"bytes,2,opt,name=Data,proto3" json:"Data,omitempty"`
+	MessageId     int32                  `protobuf:"varint,2,opt,name=MessageId,proto3" json:"MessageId,omitempty"`
+	Data          []byte                 `protobuf:"bytes,3,opt,name=Data,proto3" json:"Data,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -840,6 +864,13 @@ func (*PushMessage) Descriptor() ([]byte, []int) {
 func (x *PushMessage) GetSessionID() int64 {
 	if x != nil {
 		return x.SessionID
+	}
+	return 0
+}
+
+func (x *PushMessage) GetMessageId() int32 {
+	if x != nil {
+		return x.MessageId
 	}
 	return 0
 }
@@ -1001,13 +1032,14 @@ func (x *OnSessionDisconnectionMessage) GetID() int64 {
 
 type RemoteMessage struct {
 	state                         protoimpl.MessageState         `protogen:"open.v1"`
-	Kind                          RemoteMessage_Kind             `protobuf:"varint,1,opt,name=kind,proto3,enum=protos.RemoteMessage_Kind" json:"kind,omitempty"`
-	RPCMessage                    *RPCMessage                    `protobuf:"bytes,2,opt,name=RPCMessage,proto3" json:"RPCMessage,omitempty"`
-	NotifyMessage                 *NotifyMessage                 `protobuf:"bytes,3,opt,name=NotifyMessage,proto3" json:"NotifyMessage,omitempty"`
-	PushMessage                   *PushMessage                   `protobuf:"bytes,4,opt,name=PushMessage,proto3" json:"PushMessage,omitempty"`
-	OnSessionBindUIDMessage       *OnSessionBindUIDMessage       `protobuf:"bytes,5,opt,name=OnSessionBindUIDMessage,proto3" json:"OnSessionBindUIDMessage,omitempty"`
-	OnSessionConnectMessage       *OnSessionConnectMessage       `protobuf:"bytes,6,opt,name=OnSessionConnectMessage,proto3" json:"OnSessionConnectMessage,omitempty"`
-	OnSessionDisconnectionMessage *OnSessionDisconnectionMessage `protobuf:"bytes,7,opt,name=OnSessionDisconnectionMessage,proto3" json:"OnSessionDisconnectionMessage,omitempty"`
+	SessionID                     int64                          `protobuf:"varint,1,opt,name=SessionID,proto3" json:"SessionID,omitempty"`
+	Kind                          RemoteMessage_Kind             `protobuf:"varint,2,opt,name=kind,proto3,enum=protos.RemoteMessage_Kind" json:"kind,omitempty"`
+	RPCMessage                    *RPCMessage                    `protobuf:"bytes,3,opt,name=RPCMessage,proto3" json:"RPCMessage,omitempty"`
+	NotifyMessage                 *NotifyMessage                 `protobuf:"bytes,4,opt,name=NotifyMessage,proto3" json:"NotifyMessage,omitempty"`
+	PushMessage                   *PushMessage                   `protobuf:"bytes,5,opt,name=PushMessage,proto3" json:"PushMessage,omitempty"`
+	OnSessionBindUIDMessage       *OnSessionBindUIDMessage       `protobuf:"bytes,6,opt,name=OnSessionBindUIDMessage,proto3" json:"OnSessionBindUIDMessage,omitempty"`
+	OnSessionConnectMessage       *OnSessionConnectMessage       `protobuf:"bytes,7,opt,name=OnSessionConnectMessage,proto3" json:"OnSessionConnectMessage,omitempty"`
+	OnSessionDisconnectionMessage *OnSessionDisconnectionMessage `protobuf:"bytes,8,opt,name=OnSessionDisconnectionMessage,proto3" json:"OnSessionDisconnectionMessage,omitempty"`
 	unknownFields                 protoimpl.UnknownFields
 	sizeCache                     protoimpl.SizeCache
 }
@@ -1040,6 +1072,13 @@ func (x *RemoteMessage) ProtoReflect() protoreflect.Message {
 // Deprecated: Use RemoteMessage.ProtoReflect.Descriptor instead.
 func (*RemoteMessage) Descriptor() ([]byte, []int) {
 	return file_cluster_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *RemoteMessage) GetSessionID() int64 {
+	if x != nil {
+		return x.SessionID
+	}
+	return 0
 }
 
 func (x *RemoteMessage) GetKind() RemoteMessage_Kind {
@@ -1129,20 +1168,24 @@ const file_cluster_proto_rawDesc = "" +
 	"\x12DelMembersResponse\x12!\n" +
 	"\fService_name\x18\x01 \x01(\tR\vServiceName\x12\x1f\n" +
 	"\vInstance_id\x18\x02 \x01(\tR\n" +
-	"InstanceId\"f\n" +
+	"InstanceId\"\xba\x01\n" +
 	"\n" +
 	"RPCMessage\x12\x1c\n" +
 	"\tSessionID\x18\x01 \x01(\x03R\tSessionID\x12\x10\n" +
 	"\x03Seq\x18\x02 \x01(\x03R\x03Seq\x12\x12\n" +
 	"\x04Data\x18\x03 \x01(\fR\x04Data\x12\x14\n" +
-	"\x05Route\x18\x04 \x01(\tR\x05Route\"W\n" +
+	"\x05Route\x18\x04 \x01(\tR\x05Route\x12\x18\n" +
+	"\aSvrName\x18\x05 \x01(\tR\aSvrName\x12\x1c\n" +
+	"\tModelName\x18\x06 \x01(\tR\tModelName\x12\x1a\n" +
+	"\bFuncName\x18\a \x01(\tR\bFuncName\"W\n" +
 	"\rNotifyMessage\x12\x1c\n" +
 	"\tSessionID\x18\x01 \x01(\x03R\tSessionID\x12\x12\n" +
 	"\x04Data\x18\x02 \x01(\fR\x04Data\x12\x14\n" +
-	"\x05Route\x18\x03 \x01(\tR\x05Route\"?\n" +
+	"\x05Route\x18\x03 \x01(\tR\x05Route\"]\n" +
 	"\vPushMessage\x12\x1c\n" +
-	"\tSessionID\x18\x01 \x01(\x03R\tSessionID\x12\x12\n" +
-	"\x04Data\x18\x02 \x01(\fR\x04Data\"I\n" +
+	"\tSessionID\x18\x01 \x01(\x03R\tSessionID\x12\x1c\n" +
+	"\tMessageId\x18\x02 \x01(\x05R\tMessageId\x12\x12\n" +
+	"\x04Data\x18\x03 \x01(\fR\x04Data\"I\n" +
 	"\x17OnSessionBindUIDMessage\x12\x1c\n" +
 	"\tSessionID\x18\x01 \x01(\x03R\tSessionID\x12\x10\n" +
 	"\x03UID\x18\x02 \x01(\x03R\x03UID\"\xce\x01\n" +
@@ -1153,17 +1196,18 @@ const file_cluster_proto_rawDesc = "" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12-\n" +
 	"\x05value\x18\x02 \x01(\v2\x17.protos.ServiceInstanceR\x05value:\x028\x01\"/\n" +
 	"\x1dOnSessionDisconnectionMessage\x12\x0e\n" +
-	"\x02ID\x18\x01 \x01(\x03R\x02ID\"\xae\x05\n" +
-	"\rRemoteMessage\x12.\n" +
-	"\x04kind\x18\x01 \x01(\x0e2\x1a.protos.RemoteMessage.KindR\x04kind\x122\n" +
+	"\x02ID\x18\x01 \x01(\x03R\x02ID\"\xcc\x05\n" +
+	"\rRemoteMessage\x12\x1c\n" +
+	"\tSessionID\x18\x01 \x01(\x03R\tSessionID\x12.\n" +
+	"\x04kind\x18\x02 \x01(\x0e2\x1a.protos.RemoteMessage.KindR\x04kind\x122\n" +
 	"\n" +
-	"RPCMessage\x18\x02 \x01(\v2\x12.protos.RPCMessageR\n" +
+	"RPCMessage\x18\x03 \x01(\v2\x12.protos.RPCMessageR\n" +
 	"RPCMessage\x12;\n" +
-	"\rNotifyMessage\x18\x03 \x01(\v2\x15.protos.NotifyMessageR\rNotifyMessage\x125\n" +
-	"\vPushMessage\x18\x04 \x01(\v2\x13.protos.PushMessageR\vPushMessage\x12Y\n" +
-	"\x17OnSessionBindUIDMessage\x18\x05 \x01(\v2\x1f.protos.OnSessionBindUIDMessageR\x17OnSessionBindUIDMessage\x12Y\n" +
-	"\x17OnSessionConnectMessage\x18\x06 \x01(\v2\x1f.protos.OnSessionConnectMessageR\x17OnSessionConnectMessage\x12k\n" +
-	"\x1dOnSessionDisconnectionMessage\x18\a \x01(\v2%.protos.OnSessionDisconnectionMessageR\x1dOnSessionDisconnectionMessage\"\xa1\x01\n" +
+	"\rNotifyMessage\x18\x04 \x01(\v2\x15.protos.NotifyMessageR\rNotifyMessage\x125\n" +
+	"\vPushMessage\x18\x05 \x01(\v2\x13.protos.PushMessageR\vPushMessage\x12Y\n" +
+	"\x17OnSessionBindUIDMessage\x18\x06 \x01(\v2\x1f.protos.OnSessionBindUIDMessageR\x17OnSessionBindUIDMessage\x12Y\n" +
+	"\x17OnSessionConnectMessage\x18\a \x01(\v2\x1f.protos.OnSessionConnectMessageR\x17OnSessionConnectMessage\x12k\n" +
+	"\x1dOnSessionDisconnectionMessage\x18\b \x01(\v2%.protos.OnSessionDisconnectionMessageR\x1dOnSessionDisconnectionMessage\"\xa1\x01\n" +
 	"\x04Kind\x12\x10\n" +
 	"\fKIND_UNKNOWN\x10\x00\x12\f\n" +
 	"\bKIND_RPC\x10\x01\x12\x0f\n" +
@@ -1182,9 +1226,9 @@ const file_cluster_proto_rawDesc = "" +
 	"\n" +
 	"NewMembers\x12\x19.protos.NewMembersRequest\x1a\x1a.protos.NewMembersResponse\x12C\n" +
 	"\n" +
-	"DelMembers\x12\x19.protos.DelMembersRequest\x1a\x1a.protos.DelMembersResponse2I\n" +
-	"\fRemoteServer\x129\n" +
-	"\aReceive\x12\x15.protos.RemoteMessage\x1a\x15.protos.RemoteMessage(\x01B\tZ\a/protosb\x06proto3"
+	"DelMembers\x12\x19.protos.DelMembersRequest\x1a\x1a.protos.DelMembersResponse2K\n" +
+	"\fRemoteServer\x12;\n" +
+	"\aReceive\x12\x15.protos.RemoteMessage\x1a\x15.protos.RemoteMessage(\x010\x01B\tZ\a/protosb\x06proto3"
 
 var (
 	file_cluster_proto_rawDescOnce sync.Once

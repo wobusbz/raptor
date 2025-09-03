@@ -378,7 +378,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type RemoteServerClient interface {
-	Receive(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[RemoteMessage, RemoteMessage], error)
+	Receive(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[RemoteMessage, RemoteMessage], error)
 }
 
 type remoteServerClient struct {
@@ -389,7 +389,7 @@ func NewRemoteServerClient(cc grpc.ClientConnInterface) RemoteServerClient {
 	return &remoteServerClient{cc}
 }
 
-func (c *remoteServerClient) Receive(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[RemoteMessage, RemoteMessage], error) {
+func (c *remoteServerClient) Receive(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[RemoteMessage, RemoteMessage], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	stream, err := c.cc.NewStream(ctx, &RemoteServer_ServiceDesc.Streams[0], RemoteServer_Receive_FullMethodName, cOpts...)
 	if err != nil {
@@ -400,13 +400,13 @@ func (c *remoteServerClient) Receive(ctx context.Context, opts ...grpc.CallOptio
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type RemoteServer_ReceiveClient = grpc.ClientStreamingClient[RemoteMessage, RemoteMessage]
+type RemoteServer_ReceiveClient = grpc.BidiStreamingClient[RemoteMessage, RemoteMessage]
 
 // RemoteServerServer is the server API for RemoteServer service.
 // All implementations should embed UnimplementedRemoteServerServer
 // for forward compatibility.
 type RemoteServerServer interface {
-	Receive(grpc.ClientStreamingServer[RemoteMessage, RemoteMessage]) error
+	Receive(grpc.BidiStreamingServer[RemoteMessage, RemoteMessage]) error
 }
 
 // UnimplementedRemoteServerServer should be embedded to have
@@ -416,7 +416,7 @@ type RemoteServerServer interface {
 // pointer dereference when methods are called.
 type UnimplementedRemoteServerServer struct{}
 
-func (UnimplementedRemoteServerServer) Receive(grpc.ClientStreamingServer[RemoteMessage, RemoteMessage]) error {
+func (UnimplementedRemoteServerServer) Receive(grpc.BidiStreamingServer[RemoteMessage, RemoteMessage]) error {
 	return status.Errorf(codes.Unimplemented, "method Receive not implemented")
 }
 func (UnimplementedRemoteServerServer) testEmbeddedByValue() {}
@@ -444,7 +444,7 @@ func _RemoteServer_Receive_Handler(srv interface{}, stream grpc.ServerStream) er
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type RemoteServer_ReceiveServer = grpc.ClientStreamingServer[RemoteMessage, RemoteMessage]
+type RemoteServer_ReceiveServer = grpc.BidiStreamingServer[RemoteMessage, RemoteMessage]
 
 // RemoteServer_ServiceDesc is the grpc.ServiceDesc for RemoteServer service.
 // It's only intended for direct use with grpc.RegisterService,
@@ -457,6 +457,7 @@ var RemoteServer_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "Receive",
 			Handler:       _RemoteServer_Receive_Handler,
+			ServerStreams: true,
 			ClientStreams: true,
 		},
 	},

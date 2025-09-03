@@ -6,7 +6,6 @@ option go_package = "/protos";
 service RegistryServer {
     rpc Register(RegisterRequest) returns (RegisterResponse);
     rpc Deregister(DeregisterRequest) returns (DeregisterResponse);
-    rpc Discover(DiscoveryRequest) returns (DiscoveryResponse);
     rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
 }
 
@@ -28,13 +27,6 @@ message DeregisterRequest {
     ServiceInstance     Instances       = 1;
 }
 message DeregisterResponse {
-}
-
-message DiscoveryRequest {
-    string              Service_name    = 1;
-}
-message DiscoveryResponse {
-    repeated  ServiceInstance Instances = 1;
 }
 
 message HeartbeatRequest {
@@ -64,14 +56,17 @@ message DelMembersResponse {
 }
 
 service RemoteServer {
-    rpc Receive(stream RemoteMessage) returns (RemoteMessage);
+    rpc Receive(stream RemoteMessage) returns (stream RemoteMessage);
 }
 
 message RPCMessage {
     int64   SessionID              = 1;
     int64   Seq                    = 2;
     bytes   Data                   = 3;
-    string  Route                  = 4; // User/C2SLogin
+    string  Route                  = 4;
+    string  SvrName                = 5;
+    string  ModelName              = 6;
+    string  FuncName               = 7;
 }
 
 message NotifyMessage {
@@ -82,7 +77,8 @@ message NotifyMessage {
 
 message PushMessage {
     int64   SessionID              = 1;
-    bytes   Data                   = 2;
+    int32   MessageId              = 2;
+    bytes   Data                   = 3;
 }
 
 message OnSessionBindUIDMessage {
@@ -95,10 +91,6 @@ message OnSessionConnectMessage {
     map<string, ServiceInstance>    Instances = 2;
 }
 
-message OnSessionDisconnectionMessage {
-    int64   ID                     = 1;
-}
-
 message RemoteMessage {
     enum Kind {
         KIND_UNKNOWN               = 0;
@@ -109,11 +101,11 @@ message RemoteMessage {
         KIND_ON_SESSION_CONNECT    = 5;
         KIND_ON_SESSION_DISCONNECT = 6;
     }
-    Kind                            kind                          = 1;
-    RPCMessage                      RPCMessage                    = 2;
-    NotifyMessage                   NotifyMessage                 = 3;
-    PushMessage                     PushMessage                   = 4;
-    OnSessionBindUIDMessage         OnSessionBindUIDMessage       = 5;
-    OnSessionConnectMessage         OnSessionConnectMessage       = 6;
-    OnSessionDisconnectionMessage   OnSessionDisconnectionMessage = 7;
+    int64                           SessionID                     = 1;
+    Kind                            kind                          = 2;
+    RPCMessage                      RPCMessage                    = 3;
+    NotifyMessage                   NotifyMessage                 = 4;
+    PushMessage                     PushMessage                   = 5;
+    OnSessionBindUIDMessage         OnSessionBindUIDMessage       = 6;
+    OnSessionConnectMessage         OnSessionConnectMessage       = 7;
 }

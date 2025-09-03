@@ -1,7 +1,8 @@
 package networkentity
 
+import "google.golang.org/protobuf/proto"
+
 type NetworkEntity interface {
-	Push(sessionId int64, route string, data []byte) error
-	RPC(sessionId int64, route string, data []byte) error
-	Close() error
+	Push(proto.Message) error
+	RPC(proto.Message) error
 }

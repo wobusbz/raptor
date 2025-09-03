@@ -1,22 +1,22 @@
 package session
 
 import (
-	"game/networkentity"
+	"maps"
 	"sync"
 )
 
 type Router struct {
 	routesRw sync.RWMutex
-	routes   map[string]networkentity.NetworkEntity
+	routes   map[string]string
 }
 
 func NewRouter() *Router {
-	return &Router{routes: map[string]networkentity.NetworkEntity{}}
+	return &Router{routes: map[string]string{}}
 }
 
-func (r *Router) BindServer(server string, entity networkentity.NetworkEntity) {
+func (r *Router) BindServer(server string, instanceId string) {
 	r.routesRw.Lock()
-	r.routes[server] = entity
+	r.routes[server] = instanceId
 	r.routesRw.Unlock()
 }
 
@@ -26,9 +26,17 @@ func (r *Router) DeleteServer(server string) {
 	r.routesRw.Unlock()
 }
 
-func (r *Router) FindServer(server string) (networkentity.NetworkEntity, bool) {
+func (r *Router) FindServer(server string) (string, bool) {
 	r.routesRw.RLock()
 	defer r.routesRw.RUnlock()
-	entity, ok := r.routes[server]
-	return entity, ok
+	instanceId, ok := r.routes[server]
+	return instanceId, ok
+}
+
+func (r *Router) Routers() map[string]string {
+	var instances = make(map[string]string, len(r.routes))
+	r.routesRw.RLock()
+	defer r.routesRw.RUnlock()
+	maps.Copy(instances, r.routes)
+	return instances
 }
