@@ -44,7 +44,7 @@ func NewStreamClient(addr string) (*streamClient, error) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	c := &streamClient{
-		chSend:      make(chan pendingMessage, 1<<8),
+		chSend:      make(chan pendingMessage, 1<<16),
 		chDie:       make(chan struct{}),
 		ctx:         ctx,
 		cancel:      cancel,

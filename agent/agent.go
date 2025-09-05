@@ -10,7 +10,6 @@ import (
 	"log"
 	"net"
 	"runtime/debug"
-	"strings"
 	"sync/atomic"
 	"time"
 
@@ -25,9 +24,10 @@ func hrd(now int64) []byte {
 }
 
 type (
-	rpcHandler func(session session.Session, svrname string, msg message.Message) error
+	rpcHandler func(session session.Session, msg *message.Message) error
 
 	Agent struct {
+		*codec.Decoder
 		conn             net.Conn
 		session          session.Session
 		sessionPool      session.SessionPool
@@ -48,6 +48,7 @@ type (
 
 func NewAgent(conn net.Conn, sessionPool session.SessionPool, rpcHandler rpcHandler) *Agent {
 	a := &Agent{
+		Decoder:          codec.NewDecoder(),
 		conn:             conn,
 		sessionPool:      sessionPool,
 		chDie:            make(chan struct{}),
@@ -105,7 +106,7 @@ func (a *Agent) RPC(pb proto.Message) error {
 		Route: pber.Route(),
 		Data:  pbdata,
 	}
-	return a.rpcHandler(a.session, strings.Split(pber.Route(), ".")[0], m)
+	return a.rpcHandler(a.session, &m)
 }
 
 func (a *Agent) UpdateHeartbeat() {

@@ -5,7 +5,6 @@ import (
 	"game/agent"
 	"game/cluster"
 	"game/component"
-	"game/internal/codec"
 	"game/internal/message"
 	"game/internal/packet"
 	"game/session"
@@ -13,12 +12,12 @@ import (
 	"log"
 	"net"
 	"runtime/debug"
+	"time"
 )
 
 type AgentHandler struct {
 	server      cluster.ServiceDiscovery
 	rpcClient   *stream.StreamClientManager
-	decode      *codec.Decoder
 	sessionPool session.SessionPool
 	remote      *RemoteHandler
 	components  *component.Components
@@ -34,7 +33,6 @@ func NewAgentHandler(
 	return &AgentHandler{
 		server:      server,
 		rpcClient:   rpcClient,
-		decode:      codec.NewDecoder(),
 		sessionPool: sessionPool,
 		remote:      remote,
 		components:  components,
@@ -42,7 +40,14 @@ func NewAgentHandler(
 }
 
 func (h *AgentHandler) Handler(conn net.Conn) {
-	a := agent.NewAgent(conn, h.sessionPool, nil)
+	if tcpConn, ok := conn.(*net.TCPConn); ok {
+		tcpConn.SetReadBuffer(128 * 1024)
+		tcpConn.SetWriteBuffer(128 * 1024)
+		tcpConn.SetNoDelay(true)
+		tcpConn.SetKeepAlive(true)
+		tcpConn.SetKeepAlivePeriod(time.Second * 30)
+	}
+	a := agent.NewAgent(conn, h.sessionPool, h.remote.remoteProcess)
 
 	defer func() {
 		if r := recover(); r != nil {
@@ -58,14 +63,14 @@ func (h *AgentHandler) Handler(conn net.Conn) {
 		log.Println(err)
 		return
 	}
-	var b = make([]byte, 2048)
+	var b = make([]byte, 8*1024)
 	for {
 		n, err := conn.Read(b)
 		if err != nil {
 			log.Printf("[AgentHandler/Handler] network Read %v failed \n", err)
 			return
 		}
-		packeks, err := h.decode.Decode(b[:n])
+		packeks, err := a.Decode(b[:n])
 		if err != nil {
 			log.Printf("[AgentHandler/Handler] package devode %v failed \n", err)
 			return

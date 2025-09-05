@@ -43,7 +43,7 @@ func (d *Decoder) Decode(data []byte) ([]*packet.Packet, error) {
 	}
 
 	if d.buf.Len() < HeadLength {
-		return nil, err
+		return nil, nil
 	}
 
 	if d.size < 0 {

@@ -172,7 +172,7 @@ func (s *Service) processHandlerMessage(m *Message) error {
 		return fmt.Errorf("[Service/%s] handler[%s] returned error: %w", s.Name, m.message.Route, err)
 	}
 
-	log.Printf("[Service/%s] successfully processed message route[%s]", s.Name, m.message.Route)
+	//log.Printf("[Service/%s] successfully processed message route[%s]", s.Name, m.message.Route)
 	return nil
 }
 

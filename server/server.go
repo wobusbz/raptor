@@ -10,9 +10,12 @@ import (
 	"game/stream"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+
+	_ "net/http/pprof"
 
 	"google.golang.org/grpc"
 )
@@ -73,6 +76,10 @@ func (s *Server) initFrontend() error {
 	if err != nil {
 		return err
 	}
+
+	go func() {
+		log.Println(http.ListenAndServe("0.0.0.0:16060", nil))
+	}()
 	s.clientListener = ls
 	go func() {
 		for {

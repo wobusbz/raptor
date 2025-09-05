@@ -13,7 +13,7 @@ type User struct {
 }
 
 func (u *User) C2SLogin(session session.Session, pb *protos.C2SLogin) {
-	log.Println(pb)
+	// log.Println(pb)
 }
 
 func (u *User) Init() {
