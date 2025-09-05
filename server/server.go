@@ -1,6 +1,8 @@
-package cluster
+package server
 
 import (
+	"errors"
+	"game/cluster"
 	"game/component"
 	"game/handler"
 	"game/internal/protos"
@@ -17,7 +19,6 @@ import (
 
 type Options struct {
 	Name          string
-	IsMaster      bool
 	AdvertiseAddr string
 	ClientAddr    string
 	Frontend      bool
@@ -25,8 +26,10 @@ type Options struct {
 
 type Server struct {
 	Options
+	clientListener      net.Listener
 	server              *grpc.Server
 	ServerAddr          string
+	discoverServer      *cluster.GrpcDiscoveryServer
 	sessionPool         session.SessionPool
 	streamClientManager *stream.StreamClientManager
 	components          *component.Components
@@ -35,18 +38,15 @@ type Server struct {
 }
 
 func (s *Server) Startup() error {
-	s.sessionPool = session.NewSessionPool()
 	s.streamClientManager = stream.NewStreamClientManager()
+	s.discoverServer = cluster.NewGRPCDiscoveryServer(s.AdvertiseAddr, s.streamClientManager)
+	s.sessionPool = session.NewSessionPool()
 	s.components = component.NewComponents(s.sessionPool)
 
-	s.remoteHandler = handler.NewRemoteHandler(nil, s.sessionPool, s.streamClientManager, s.components)
-	s.agentHandler = handler.NewAgentHandler(s.Name, s.sessionPool, s.remoteHandler, s.components)
+	s.remoteHandler = handler.NewRemoteHandler(s.discoverServer, s.sessionPool, s.streamClientManager, s.components)
+	s.agentHandler = handler.NewAgentHandler(s.discoverServer, s.streamClientManager, s.sessionPool, s.remoteHandler, s.components)
 
-	if err := s.initNode(); err != nil {
-		return err
-	}
-	s.initFrontend()
-	return nil
+	return errors.Join(s.initNode(), s.initFrontend())
 }
 
 func (s *Server) initNode() error {
@@ -55,26 +55,25 @@ func (s *Server) initNode() error {
 		return err
 	}
 	s.server = grpc.NewServer()
-	if s.IsMaster {
-		protos.RegisterRegistryServerServer(s.server, nil)
-	}
+	protos.RegisterRegistryServerServer(s.server, s.discoverServer)
 	protos.RegisterRemoteServerServer(s.server, s.remoteHandler)
 	go func() {
 		if err = s.server.Serve(ls); err != nil {
 			log.Fatalf("Start current node failed: %v", err)
 		}
 	}()
-	return nil
+	return s.discoverServer.RegisterNode(s.Name, s.ServerAddr, s.ClientAddr != "", s.components.LocalHandler())
 }
 
 func (s *Server) initFrontend() error {
 	if s.ClientAddr == "" {
 		return nil
 	}
-	ls, err := net.Listen("tcp", s.ServerAddr)
+	ls, err := net.Listen("tcp", s.ClientAddr)
 	if err != nil {
 		return err
 	}
+	s.clientListener = ls
 	go func() {
 		for {
 			conn, err := ls.Accept()
@@ -88,12 +87,14 @@ func (s *Server) initFrontend() error {
 	return nil
 }
 
-func (s *Server) Register(comp component.Component) {
-}
-
 func (s *Server) Shutdown() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 	<-c
-	s.server.GracefulStop()
+	s.discoverServer.Shutdown()
+	s.streamClientManager.Shutdown()
+	if s.clientListener != nil {
+		s.clientListener.Close()
+	}
+	s.server.Stop()
 }

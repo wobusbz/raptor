@@ -1,0 +1,11 @@
+syntax = "proto3";
+package cent.user;
+option go_package = "/protos";
+
+
+message /*1*/ C2SLogin {
+    string      name    = 1;
+}
+message /*2*/ S2CLogin {
+    string      name    = 1;
+}

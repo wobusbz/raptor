@@ -3,7 +3,8 @@ package component
 type typ int
 
 const (
-	onSessionConnect = iota
+	_ = iota
+	onSessionConnect
 	onConnectionSession
 	onSessionDisconnect
 )

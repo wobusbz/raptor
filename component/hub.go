@@ -6,6 +6,7 @@ import (
 	"game/internal/message"
 	"game/session"
 	"log"
+	"strings"
 	"sync"
 )
 
@@ -13,8 +14,8 @@ type Components struct {
 	services    map[string]*Service
 	components  map[string]Component
 	sessionPool session.SessionPool
+	cacheRoute  map[uint32]string
 	mu          sync.RWMutex
-	started     bool
 	stopOnce    sync.Once
 }
 
@@ -22,26 +23,29 @@ func NewComponents(sessionPool session.SessionPool) *Components {
 	return &Components{
 		services:    make(map[string]*Service),
 		components:  make(map[string]Component),
+		cacheRoute:  make(map[uint32]string),
 		sessionPool: sessionPool,
 	}
 }
 
-func (cs *Components) Register(name string, c Component) error {
+func (cs *Components) Register(c Component) error {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
-
-	if _, ok := cs.components[name]; ok {
-		return fmt.Errorf("[Components/Register] component %s already registered", name)
+	service := NewService(c, cs.sessionPool)
+	if service == nil {
+		return fmt.Errorf("[Components/Register] NewService result is nil")
+	}
+	if err := service.ExtractHandler(cs); err != nil {
+		return fmt.Errorf("[Components/Register] ExtractHandler %w", err)
+	}
+	if _, ok := cs.components[service.Name]; ok {
+		return fmt.Errorf("[Components/Register] component %s already registered", service.Name)
 	}
 
-	cs.components[name] = c
+	cs.components[service.Name] = c
 
-	if cs.started {
-		if err := cs.initComponent(name, c); err != nil {
-			delete(cs.components, name)
-			return fmt.Errorf("[Components/Register] failed to initialize component %s: %w", name, err)
-		}
-	}
+	service.comp.Init()
+	cs.services[service.Name] = service
 	return nil
 }
 
@@ -68,54 +72,16 @@ func (cs *Components) Unregister(name string) error {
 	return nil
 }
 
-func (cs *Components) initComponent(name string, c Component) error {
-	c.Init()
-
-	service := NewService(c, cs.sessionPool)
-	if service == nil {
-		return fmt.Errorf("failed to create service for component %s", name)
-	}
-
-	cs.services[name] = service
-	log.Printf("[Components/Init] initialized component: %s", name)
-	return nil
-}
-
-func (cs *Components) Start() error {
-	cs.mu.Lock()
-	defer cs.mu.Unlock()
-
-	if cs.started {
-		return errors.New("[Components/Start] components already started")
-	}
-
-	for name, component := range cs.components {
-		if err := cs.initComponent(name, component); err != nil {
-			cs.cleanupServices()
-			return fmt.Errorf("[Components/Start] failed to initialize component %s: %w", name, err)
-		}
-	}
-
-	cs.started = true
-	log.Printf("[Components/Start] all components started successfully")
-	return nil
-}
-
 func (cs *Components) Stop() error {
 	var err error
 	cs.stopOnce.Do(func() {
 		cs.mu.Lock()
 		defer cs.mu.Unlock()
 
-		if !cs.started {
-			err = errors.New("[Components/Stop] components not started")
-			return
-		}
 		cs.cleanupServices()
 		for _, service := range cs.services {
 			service.Stop()
 		}
-		cs.started = false
 		log.Printf("[Components/Stop] all components stopped")
 	})
 	return err
@@ -131,9 +97,7 @@ func (cs *Components) cleanupServices() {
 }
 
 func (cs *Components) IsStarted() bool {
-	cs.mu.RLock()
-	defer cs.mu.RUnlock()
-	return cs.started
+	return false
 }
 
 func (cs *Components) GetComponentNames() []string {
@@ -154,12 +118,25 @@ func (cs *Components) HasComponent(name string) bool {
 	return exists
 }
 
+func (cs *Components) HasMessageID(id uint32) bool {
+	_, exists := cs.cacheRoute[id]
+	return exists
+}
+
+func (cs *Components) GetMessageRoute(id uint32) string {
+	return cs.cacheRoute[id]
+}
+
+func (cs *Components) LocalHandler() map[uint32]string {
+	return cs.cacheRoute
+}
+
 func (cs *Components) Tell(componentName string, msg *message.Message) error {
 	cs.mu.RLock()
-	service, exists := cs.services[componentName]
+	service, ok := cs.services[componentName]
 	cs.mu.RUnlock()
 
-	if !exists {
+	if !ok {
 		return fmt.Errorf("[Components/Tell] component %s not found", componentName)
 	}
 
@@ -172,10 +149,10 @@ func (cs *Components) Tell(componentName string, msg *message.Message) error {
 
 func (cs *Components) Ask(componentName string, msg *message.Message) (*message.Message, error) {
 	cs.mu.RLock()
-	service, exists := cs.services[componentName]
+	service, ok := cs.services[componentName]
 	cs.mu.RUnlock()
 
-	if !exists {
+	if !ok {
 		return nil, fmt.Errorf("[Components/Ask] component %s not found", componentName)
 	}
 
@@ -203,7 +180,7 @@ func (cs *Components) Broadcast(msg *message.Message) error {
 	return errors.Join(errs...)
 }
 
-func (cs *Components) Route(msg *message.Message) error {
+func (cs *Components) Route(session session.Session, msg *message.Message) error {
 	componentName, handlerName := cs.parseRoute(msg.Route)
 	if componentName == "" {
 		return fmt.Errorf("[Components/Route] invalid route format: %s", msg.Route)
@@ -221,16 +198,14 @@ func (cs *Components) Route(msg *message.Message) error {
 	if handlerName != "" && !service.HasHandler(handlerName) {
 		return fmt.Errorf("[Components/Route] handler %s not found in component %s", handlerName, componentName)
 	}
-	return service.Tell(msg)
+	return service.TellSession(session, msg)
 }
 
 func (cs *Components) parseRoute(route string) (componentName, handlerName string) {
-	for i, char := range route {
-		if char == '.' {
-			return route[:i], route[i+1:]
-		}
-	}
-	return route, ""
+	routes := strings.Split(route, "/")
+	componentName = routes[1]
+	handlerName = routes[2]
+	return
 }
 
 func (cs *Components) OnSessionConnect(sess session.Session) {

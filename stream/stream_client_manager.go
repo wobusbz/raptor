@@ -28,10 +28,13 @@ func (s *StreamClientManager) AddStreamClient(svrname, instanceId, addr string) 
 	return stream, nil
 }
 
-func (s *StreamClientManager) DelStreamClient(instanceId string) {
+func (s *StreamClientManager) DelStreamClient(svrname, instanceId string) {
 	s.clientsMux.Lock()
-	delete(s.clients, instanceId)
-	s.clientsMux.Unlock()
+	defer s.clientsMux.Unlock()
+	if _, ok := s.clients[instanceId]; !ok {
+		return
+	}
+	delete(s.clients[svrname], instanceId)
 }
 
 func (s *StreamClientManager) GetStreamClient(svrname, instanceId, addr string) (StreamClient, error) {
@@ -43,4 +46,13 @@ func (s *StreamClientManager) GetStreamClient(svrname, instanceId, addr string) 
 	}
 	s.clientsMux.RUnlock()
 	return s.AddStreamClient(svrname, instanceId, addr)
+}
+
+func (s *StreamClientManager) Shutdown() {
+	for _, clients := range s.clients {
+		for _, v := range clients {
+			v.Close()
+		}
+	}
+	s.clients = nil
 }

@@ -9,6 +9,7 @@ import (
 	"game/session"
 	"log"
 	"reflect"
+	"strings"
 
 	"google.golang.org/protobuf/proto"
 )
@@ -69,7 +70,7 @@ func (s *Service) suitableHandlerMethods(typ reflect.Type) map[string]*Handler {
 	return methods
 }
 
-func (s *Service) ExtractHandler() error {
+func (s *Service) ExtractHandler(comps *Components) error {
 	if s.Receiver.Kind() == reflect.Invalid {
 		return errors.New("[Service/ExtractHandler] invalid receiver")
 	}
@@ -90,8 +91,13 @@ func (s *Service) ExtractHandler() error {
 			return fmt.Errorf("[Service/ExtractHandler] type %s has no exported methods of suitable type", s.Name)
 		}
 	}
-
 	for _, handler := range s.Handlers {
+		if msgInfo, ok := reflect.New(handler.Type.Elem()).Interface().(interface {
+			Route() string
+			ID() uint32
+		}); ok {
+			comps.cacheRoute[uint32(msgInfo.ID())] = msgInfo.Route()
+		}
 		handler.Receiver = s.Receiver
 	}
 	return nil
@@ -138,7 +144,7 @@ func (s *Service) localProcessMessage(m *Message) error {
 }
 
 func (s *Service) processHandlerMessage(m *Message) error {
-	handler, ok := s.Handlers[m.message.Route]
+	handler, ok := s.Handlers[strings.Split(m.message.Route, "/")[2]]
 	if !ok {
 		return fmt.Errorf("[Service/Handlers] handler[%s] not found", m.message.Route)
 	}
@@ -203,6 +209,10 @@ func (s *Service) tell(message *Message) error {
 
 func (s *Service) Tell(msg *message.Message) error {
 	return s.tell(&Message{message: msg})
+}
+
+func (s *Service) TellSession(session session.Session, msg *message.Message) error {
+	return s.tell(&Message{s: session, message: msg})
 }
 
 func (s *Service) Ask(msg *message.Message) (*message.Message, error) {

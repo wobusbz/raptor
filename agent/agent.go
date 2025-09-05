@@ -10,6 +10,7 @@ import (
 	"log"
 	"net"
 	"runtime/debug"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -47,11 +48,12 @@ type (
 
 func NewAgent(conn net.Conn, sessionPool session.SessionPool, rpcHandler rpcHandler) *Agent {
 	a := &Agent{
-		conn:        conn,
-		sessionPool: sessionPool,
-		chDie:       make(chan struct{}),
-		rpcHandler:  rpcHandler,
-		sendch:      make(chan pendingMessage, 1<<8),
+		conn:             conn,
+		sessionPool:      sessionPool,
+		chDie:            make(chan struct{}),
+		rpcHandler:       rpcHandler,
+		heartbeatTimeout: time.Second * 5,
+		sendch:           make(chan pendingMessage, 1<<8),
 	}
 
 	a.lastAt.Store(time.Now().Unix())
@@ -68,7 +70,7 @@ func (a *Agent) Push(pb proto.Message) error {
 	if a.state.Load() {
 		return fmt.Errorf("[Agent/Push] %v Agent closed", a.session.ID())
 	}
-	pber, ok := pb.(interface{ GetMsgId() int32 })
+	pber, ok := pb.(interface{ ID() uint32 })
 	if !ok {
 		return fmt.Errorf("[Agent/Push] Reflection GetMsgId failure")
 	}
@@ -76,7 +78,7 @@ func (a *Agent) Push(pb proto.Message) error {
 	if err != nil {
 		return fmt.Errorf("[Agent/Push] protobuf Marshal failed %v", err)
 	}
-	return a.Response(int(pber.GetMsgId()), pbData)
+	return a.Response(int(pber.ID()), pbData)
 }
 
 func (a *Agent) Response(id int, pbData []byte) error {
@@ -90,10 +92,7 @@ func (a *Agent) RPC(pb proto.Message) error {
 	if a.state.Load() {
 		return fmt.Errorf("[Agent/RPC] %v Agent closed", a.session.ID())
 	}
-	pber, ok := pb.(interface {
-		GetRoute() string
-		GetSvrName() string
-	})
+	pber, ok := pb.(interface{ Route() string })
 	if !ok {
 		return fmt.Errorf("[Agent/RPC] Reflection GetSvrName failure")
 	}
@@ -103,10 +102,14 @@ func (a *Agent) RPC(pb proto.Message) error {
 	}
 	m := message.Message{
 		Type:  message.Notify,
-		Route: pber.GetRoute(),
+		Route: pber.Route(),
 		Data:  pbdata,
 	}
-	return a.rpcHandler(a.session, pber.GetSvrName(), m)
+	return a.rpcHandler(a.session, strings.Split(pber.Route(), ".")[0], m)
+}
+
+func (a *Agent) UpdateHeartbeat() {
+	a.lastAt.Store(time.Now().Unix())
 }
 
 func (a *Agent) Close() error {
@@ -114,8 +117,6 @@ func (a *Agent) Close() error {
 		return nil
 	}
 	close(a.chDie)
-	// TODO 这里应该向模块发送关闭当前会话的请求
-	// TODO 以及向其它服务通知该session断开
 	return a.conn.Close()
 }
 
@@ -142,19 +143,17 @@ func (a *Agent) write() {
 	for {
 		select {
 		case vtime := <-ticker.C:
-			if vtime.Add(a.heartbeatTimeout*2).Unix() < a.lastAt.Load() {
+			if vtime.Unix()-int64(a.heartbeatTimeout.Seconds()*2) > a.lastAt.Load() {
 				log.Printf("[Agent/Write] Session heartbeat timeout, LastTime=%d, Deadline=%d\n", a.lastAt.Load(), vtime.Unix()-a.lastAt.Load())
 				return
 			}
 			hrd(vtime.UTC().Unix())
-			a.lastAt.Add(time.Now().Unix())
 
 		case data := <-writeCh:
 			if _, err := a.conn.Write(data); err != nil {
 				log.Printf("[Agent/Write] SessionId %d net write %s\n", a.session.ID(), err.Error())
 				return
 			}
-			a.lastAt.Add(time.Now().Unix())
 
 		case data := <-a.sendch:
 			pb, err := codec.Encode(packet.Data, message.Encode(&message.Message{Type: data.typ, ID: uint(data.id), Data: data.payload}))

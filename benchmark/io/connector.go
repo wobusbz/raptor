@@ -1,6 +1,7 @@
-package io
+package benchmark
 
 import (
+	"fmt"
 	"game/internal/codec"
 	"game/internal/message"
 	"game/internal/packet"
@@ -62,14 +63,18 @@ func (c *Connector) OnConnected(callback func([]byte)) {
 	c.connectedCallback = callback
 }
 
-func (c *Connector) Request(route string, v proto.Message, callback Callback) error {
+func (c *Connector) Request(v proto.Message) error {
 	data, err := serialize(v)
 	if err != nil {
 		return err
 	}
+	pber, ok := v.(interface{ ID() uint32 })
+	if !ok {
+		return fmt.Errorf("反射失败 %v", v)
+	}
 	msg := &message.Message{
 		Type: message.Request,
-		ID:   1,
+		ID:   uint(pber.ID()),
 		Data: data,
 	}
 	if err = c.sendMessage(msg); err != nil {

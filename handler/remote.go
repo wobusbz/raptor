@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"errors"
 	"fmt"
 	"game/agent"
 	"game/cluster"
@@ -12,6 +11,7 @@ import (
 	"game/stream"
 	"log"
 	"runtime/debug"
+	"strings"
 
 	"google.golang.org/grpc"
 )
@@ -31,12 +31,7 @@ func NewRemoteHandler(
 	rpcClient *stream.StreamClientManager,
 	components *component.Components,
 ) *RemoteHandler {
-	return &RemoteHandler{
-		server:      server,
-		sessionPool: sessionPool,
-		rpcClient:   rpcClient,
-		components:  components,
-	}
+	return &RemoteHandler{server: server, sessionPool: sessionPool, rpcClient: rpcClient, components: components}
 }
 
 func (r *RemoteHandler) Receive(stream grpc.BidiStreamingServer[protos.RemoteMessage, protos.RemoteMessage]) error {
@@ -48,6 +43,7 @@ func (r *RemoteHandler) Receive(stream grpc.BidiStreamingServer[protos.RemoteMes
 	for {
 		recv, err := stream.Recv()
 		if err != nil {
+			log.Println(err)
 			return err
 		}
 		r.processReceive(recv)
@@ -55,26 +51,53 @@ func (r *RemoteHandler) Receive(stream grpc.BidiStreamingServer[protos.RemoteMes
 }
 
 func (r *RemoteHandler) processReceive(m *protos.RemoteMessage) {
-	session, ok := r.sessionPool.GetSessionByID(m.PushMessage.GetSessionID())
-	if !ok {
-		return
-	}
 	switch m.Kind {
 	case protos.RemoteMessage_KIND_RPC:
-		r.remoteProcess(session, "", &message.Message{})
+		session, ok := r.sessionPool.GetSessionByID(m.GetSessionID())
+		if !ok {
+			return
+		}
+		if err := r.components.Route(session, &message.Message{Route: m.RPCMessage.Route, Data: m.RPCMessage.Data}); err != nil {
+			log.Println(err)
+		}
 	case protos.RemoteMessage_KIND_NOTIFY:
 
 	case protos.RemoteMessage_KIND_PUSH:
+		session, ok := r.sessionPool.GetSessionByID(m.PushMessage.GetSessionID())
+		if !ok {
+			return
+		}
 		session.Response(int(m.PushMessage.GetMessageId()), m.PushMessage.GetData())
 
 	case protos.RemoteMessage_KIND_ON_SESSION_BIND_UID:
 
 	case protos.RemoteMessage_KIND_ON_SESSION_CONNECT:
-		agent := agent.NewRemote(nil, r.sessionPool, r.remoteProcess)
-		r.sessionPool.NewSession(agent, m.OnSessionConnectMessage.GetID())
+		var session session.Session
+		for _, v := range m.OnSessionConnectMessage.GetInstances() {
+			if !v.Frontend {
+				continue
+			}
+			gateClient, err := r.rpcClient.GetStreamClient(v.GetServiceName(), v.GetInstanceId(), v.GetAddr())
+			if err != nil {
+				log.Println(err)
+				return
+			}
+			agent := agent.NewRemote(gateClient, r.sessionPool, r.remoteCall)
+			session = r.sessionPool.NewSession(agent, m.OnSessionConnectMessage.GetID())
+		}
+		if session == nil {
+			return
+		}
+		for _, v := range m.OnSessionConnectMessage.GetInstances() {
+			session.Routers().BindServer(v.GetServiceName(), v.GetInstanceId())
+		}
 		r.components.OnSessionConnect(session)
 
 	case protos.RemoteMessage_KIND_ON_SESSION_DISCONNECT:
+		session, ok := r.sessionPool.GetSessionByID(m.GetSessionID())
+		if !ok {
+			return
+		}
 		r.sessionPool.DelSessionByID(m.OnSessionConnectMessage.GetID())
 		r.components.OnSessionDisconnect(session)
 	}
@@ -96,12 +119,12 @@ func (r *RemoteHandler) remoteCall(session session.Session, svrname string, msg 
 	return rpcClient.Send(msg)
 }
 
-func (r *RemoteHandler) remoteProcess(session session.Session, svrname string, msg *message.Message) error {
+func (r *RemoteHandler) remoteProcess(session session.Session, msg *message.Message) error {
 	var remoteMessage = &protos.RemoteMessage{SessionID: session.ID()}
 	switch msg.Type {
-	case message.Notify:
+	case message.Request:
 		remoteMessage.Kind = protos.RemoteMessage_KIND_RPC
-		remoteMessage.NotifyMessage = &protos.NotifyMessage{Data: msg.Data, Route: msg.Route}
+		remoteMessage.RPCMessage = &protos.RPCMessage{Data: msg.Data, Route: msg.Route}
 
 	case message.Push:
 		remoteMessage.Kind = protos.RemoteMessage_KIND_PUSH
@@ -110,29 +133,5 @@ func (r *RemoteHandler) remoteProcess(session session.Session, svrname string, m
 	default:
 		return fmt.Errorf("[RemoteHandler/RemoteProcess] remoteProcess msg.type[%d] not found", msg.Type)
 	}
-	return r.remoteCall(session, svrname, remoteMessage)
-}
-
-func (r *RemoteHandler) notifyRemoteOnSessionClose(session session.Session) error {
-	var (
-		errs          []error
-		remoteMessage = &protos.RemoteMessage{
-			Kind:      protos.RemoteMessage_KIND_ON_SESSION_DISCONNECT,
-			SessionID: session.ID(),
-		}
-	)
-	for svrname, instanceId := range session.Routers().Routers() {
-		svrNodeInfo, ok := r.server.GetNodeInfo(svrname, instanceId)
-		if !ok {
-			errs = append(errs, fmt.Errorf("[RemoteHandler/notifyRemoteOnSessionClose] server %s not found", svrname))
-			continue
-		}
-		rpcClient, err := r.rpcClient.GetStreamClient(svrname, instanceId, svrNodeInfo.Instances.Addr)
-		if err != nil {
-			errs = append(errs, err)
-			continue
-		}
-		errs = append(errs, rpcClient.Send(remoteMessage))
-	}
-	return errors.Join(errs...)
+	return r.remoteCall(session, strings.ToUpper(strings.Split(r.server.GetRoute(uint32(msg.ID)), ".")[0]), remoteMessage)
 }

@@ -1,12 +1,13 @@
 syntax = "proto3";
 package protos;
-option go_package = "/protos";
-
+option go_package = "./;protos";
 
 service RegistryServer {
     rpc Register(RegisterRequest) returns (RegisterResponse);
     rpc Deregister(DeregisterRequest) returns (DeregisterResponse);
     rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+    rpc NewMembers(NewMembersRequest) returns (NewMembersResponse);
+    rpc DelMembers(DelMembersRequest) returns (DelMembersResponse);
 }
 
 message ServiceInstance {
@@ -14,7 +15,7 @@ message ServiceInstance {
     string              Instance_id     = 2;
     string              Addr            = 3;
     bool                Frontend        = 4;
-    map<string, int32>  Messages        = 5;
+    map<uint32, string> Messages        = 5;
 }
 
 message RegisterRequest {
@@ -35,26 +36,23 @@ message HeartbeatRequest {
 message HeartbeatResponse {
 }
 
-service MembersServer {
-    rpc NewMembers(NewMembersRequest) returns (NewMembersResponse);
-    rpc DelMembers(DelMembersRequest) returns (DelMembersResponse);
-}
 
 message NewMembersRequest {
-    ServiceInstance     Instances       = 1;
+    repeated ServiceInstance     Instances       = 1;
 }
 message NewMembersResponse {
 }
 
-message DelMembersRequest {
+message DelMembers{
     string              Service_name    = 1;
     string              Instance_id     = 2;
+}
+message DelMembersRequest {
+    repeated DelMembers DelMembers      = 1;
 }
 message DelMembersResponse {
-    string              Service_name    = 1;
-    string              Instance_id     = 2;
 }
-
+ 
 service RemoteServer {
     rpc Receive(stream RemoteMessage) returns (stream RemoteMessage);
 }

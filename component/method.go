@@ -20,12 +20,12 @@ func isExported(name string) bool {
 	return unicode.IsUpper(w)
 }
 
-func isExportedOrBuiltinType(t reflect.Type) bool {
-	for t.Kind() == reflect.Pointer {
-		t = t.Elem()
-	}
-	return isExported(t.Name()) || t.PkgPath() == ""
-}
+// func isExportedOrBuiltinType(t reflect.Type) bool {
+// 	for t.Kind() == reflect.Pointer {
+// 		t = t.Elem()
+// 	}
+// 	return isExported(t.Name()) || t.PkgPath() == ""
+// }
 
 func isHandlerMethod(method reflect.Method) bool {
 	mt := method.Type

@@ -2,17 +2,17 @@ package agent
 
 import (
 	"fmt"
-	"game/internal/message"
 	"game/internal/protos"
 	"game/session"
 	"game/stream"
+	"strings"
 	"sync/atomic"
 
 	"google.golang.org/protobuf/proto"
 )
 
 type (
-	remoteHandler func(session session.Session, svrname string, message *message.Message) error
+	remoteHandler func(session session.Session, svrname string, msg *protos.RemoteMessage) error
 
 	remote struct {
 		gateClient    stream.StreamClient
@@ -50,10 +50,7 @@ func (r *remote) Push(pb proto.Message) error {
 }
 
 func (r *remote) RPC(pb proto.Message) error {
-	pber, ok := pb.(interface {
-		GetRoute() string
-		GetSvrName() string
-	})
+	pber, ok := pb.(interface{ Route() string })
 	if !ok {
 		return fmt.Errorf("[Remote/RPC] Reflection GetSvrName failure")
 	}
@@ -65,8 +62,7 @@ func (r *remote) RPC(pb proto.Message) error {
 		Kind:       protos.RemoteMessage_KIND_RPC,
 		RPCMessage: &protos.RPCMessage{SessionID: r.session.ID(), Data: pbdata},
 	}
-	_ = m
-	return r.remoteHandler(r.session, pber.GetSvrName(), nil)
+	return r.remoteHandler(r.session, strings.Split(pber.Route(), ".")[0], m)
 }
 
 func (r *remote) Close() error {

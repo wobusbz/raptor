@@ -56,7 +56,7 @@ func NewStreamClient(addr string) (*streamClient, error) {
 		return nil, err
 	}
 
-	go c.loop()
+	go c.write()
 
 	return c, nil
 }
@@ -105,7 +105,7 @@ func (c *streamClient) Close() error {
 	return errors.Join(c.stream.CloseSend(), c.conn.Close())
 }
 
-func (c *streamClient) loop() {
+func (c *streamClient) write() {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("[StreamClient/Loop] %s\n%v\n", debug.Stack(), r)
@@ -113,7 +113,7 @@ func (c *streamClient) loop() {
 		close(c.chSend)
 		close(c.chReconnect)
 	}()
-
+	c.read()
 	for {
 		select {
 		case <-c.chReconnect:
@@ -137,4 +137,16 @@ func (c *streamClient) loop() {
 			return
 		}
 	}
+}
+
+func (c *streamClient) read() {
+	go func() {
+		for {
+			_, err := c.stream.Recv()
+			if err != nil {
+				c.stream.CloseSend()
+				return
+			}
+		}
+	}()
 }

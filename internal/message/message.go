@@ -1,6 +1,8 @@
 package message
 
-import "maps"
+import (
+	"maps"
+)
 
 type Type byte
 
@@ -21,20 +23,25 @@ type Message struct {
 var dict = map[int]string{1: "CENT/User/C2SLogin"}
 
 func Decode(data []byte) *Message {
-	var m = &Message{}
-	var offset int
-	for offset = 0; offset < len(data); offset++ {
+	var m = &Message{Type: Type(data[0])}
+	id := uint(0)
+	shift := uint(0)
+	offset := 1
+
+	for ; offset < len(data); offset++ {
 		b := data[offset]
-		m.ID |= uint(b&0x7F) << (uint(offset) * 7)
+		id |= uint(b&0x7F) << shift
+		shift += 7
 		if b&0x80 == 0 {
 			break
 		}
 	}
+	m.ID = id
+
 	if offset < len(data) {
 		m.Data = data[offset+1:]
-	} else {
-		m.Data = nil
 	}
+
 	m.Route = dict[int(m.ID)]
 	return m
 }
@@ -42,6 +49,8 @@ func Decode(data []byte) *Message {
 func Encode(m *Message) []byte {
 	id := uint(m.ID)
 	var header []byte
+	header = append(header, byte(m.Type))
+
 	for {
 		b := byte(id & 0x7F)
 		id >>= 7
